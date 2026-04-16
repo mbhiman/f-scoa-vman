@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import InputField from "@/components/auth/fields/input-fields";
+import { useStudentAuthStore } from "@/store/student-auth-store";
 import {
     staggerContainer,
     slideUp,
@@ -143,6 +144,13 @@ export default function NcvetLoginForm() {
                 setMessage(json.message || "OTP verification failed");
                 return;
             }
+
+            localStorage.setItem("accessToken", json.data.access_token);
+            localStorage.setItem("expiresAt", json.data.expires_at);
+
+            useStudentAuthStore
+                .getState()
+                .setAccessToken(json.data.access_token, json.data.expires_in);
 
             setMessage("Login successful.");
 
