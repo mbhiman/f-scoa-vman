@@ -1,13 +1,15 @@
-import SignUpPage from '@/components/auth/signupform'
-import React from 'react'
+import AuthPageShell from "@/components/auth/auth-page-shell";
+import NcvetSignupForm from "@/components/auth/forms/ncvet-signup-form";
 
-function NcvetSignupPage() {
+export default function NcvetSignUpPage() {
   return (
-    <div>
-        <h1>NCVET SignUp Page</h1>
-        <SignUpPage />
-    </div>
-  )
+    <AuthPageShell
+      variant="ncvet"
+      title="Create your account"
+      subtitle="Register as an NCVET student"
+      portalLabel="NCVET Student Portal"
+    >
+      <NcvetSignupForm />
+    </AuthPageShell>
+  );
 }
-
-export default NcvetSignupPage

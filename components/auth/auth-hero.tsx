@@ -15,6 +15,21 @@ type AuthHeroProps = {
     variant: "regular" | "ncvet";
 };
 
+const heroImages = {
+    regular: [
+        "/images/hero-1.jpg",
+        "/images/hero-4.jpg",
+        "/images/hero-3.jpg",
+        "/images/hero-2.jpg",
+    ],
+    ncvet: [
+        "/images/ncvet-hero1.jpg",
+        "/images/ncvet-hero2.jpg",
+        "/images/ncvet-hero3.jpg",
+        "/images/ncvet-hero4.png",
+    ],
+};
+
 const heroContent = {
     regular: {
         badge: "Free Certification Program",
@@ -44,6 +59,7 @@ const heroContent = {
 
 export default function AuthHero({ variant }: AuthHeroProps) {
     const content = heroContent[variant];
+    const images = heroImages[variant];
 
     return (
         <motion.div
@@ -68,46 +84,29 @@ export default function AuthHero({ variant }: AuthHeroProps) {
             </motion.div>
 
             <div className="relative h-85 lg:h-105">
+
                 <motion.div
                     variants={scaleIn}
                     animate={floatAnimation}
-                    className="absolute left-0 top-0 w-[55%] overflow-hidden rounded-2xl border border-border bg-background shadow-lg"
+                    className="absolute left-0 top-0 w-[55%] rounded-2xl overflow-hidden border border-border bg-background shadow-lg"
                 >
-                    <Image
-                        src="/images/hero-1.jpg"
-                        width={400}
-                        height={280}
-                        alt="Learners in training"
-                        className="h-65 w-full object-cover"
-                    />
+                    <Image src={images[0]} width={400} height={280} alt="Hero image 1" className="w-full h-65 object-cover" />
                 </motion.div>
 
                 <motion.div
                     variants={scaleIn}
                     animate={floatAnimationDelayed}
-                    className="absolute right-0 top-4 w-[42%] overflow-hidden rounded-2xl border border-border bg-background shadow-lg"
+                    className="absolute right-0 top-4 w-[42%] rounded-2xl overflow-hidden border border-border bg-background shadow-lg"
                 >
-                    <Image
-                        src="/images/hero-4.jpg"
-                        width={300}
-                        height={200}
-                        alt="Program visual"
-                        className="h-47 w-full object-cover"
-                    />
+                    <Image src={images[1]} width={300} height={200} alt="Hero image 2" className="w-full h-47 object-cover" />
                 </motion.div>
 
                 <motion.div
                     variants={scaleIn}
                     animate={floatAnimationSlow}
-                    className="absolute bottom-0 right-4 w-[52%] overflow-hidden rounded-2xl border border-border bg-background shadow-lg"
+                    className="absolute right-4 bottom-0 w-[52%] rounded-2xl overflow-hidden border border-border bg-background shadow-lg"
                 >
-                    <Image
-                        src="/images/hero-3.jpg"
-                        width={350}
-                        height={220}
-                        alt="Students learning"
-                        className="h-53 w-full object-cover"
-                    />
+                    <Image src={images[2]} width={350} height={220} alt="Hero image 3" className="w-full h-53 object-cover" />
                 </motion.div>
 
                 <motion.div
@@ -116,16 +115,11 @@ export default function AuthHero({ variant }: AuthHeroProps) {
                         y: [0, -6, 0],
                         transition: { duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 2 },
                     }}
-                    className="absolute bottom-2 left-8 w-[36%] overflow-hidden rounded-2xl border border-border bg-background shadow-lg"
+                    className="absolute left-8 bottom-2 w-[36%] rounded-2xl overflow-hidden border border-border bg-background shadow-lg"
                 >
-                    <Image
-                        src="/images/hero-2.jpg"
-                        width={240}
-                        height={160}
-                        alt="Learning experience"
-                        className="h-37 w-full object-cover"
-                    />
+                    <Image src={images[3]} width={240} height={160} alt="Hero image 4" className="w-full h-37 object-cover" />
                 </motion.div>
+
             </div>
 
             <motion.div variants={slideUp} className="mt-6 flex items-center gap-6">

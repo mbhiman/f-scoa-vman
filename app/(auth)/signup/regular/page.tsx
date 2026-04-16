@@ -1,14 +1,15 @@
-import SignUpPage from '@/components/auth/signupform'
-import React from 'react'
+import AuthPageShell from "@/components/auth/auth-page-shell";
+import RegularSignupForm from "@/components/auth/forms/regular-signup-form";
 
-function RegularSignUpPage() {
+export default function RegularSignUpPage() {
   return (
-    <div>
-
-        <h1>Regular SignUp Page</h1>
-        <SignUpPage />
-    </div>
-  )
+    <AuthPageShell
+      variant="regular"
+      title="Join the program"
+      subtitle="Create your regular student account"
+      portalLabel="Regular Student Portal"
+    >
+      <RegularSignupForm />
+    </AuthPageShell>
+  );
 }
-
-export default RegularSignUpPage
