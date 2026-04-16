@@ -13,8 +13,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             </div>
 
             <div className="relative z-10 min-h-screen">
-                <div className="mx-auto flex min-h-screen w-full max-w-7xl items-start px-4 py-6 sm:px-6 lg:items-center lg:px-8">
-                    <div className="grid w-full items-center gap-10 lg:grid-cols-2">
+                <div className="mx-auto flex min-h-screen w-full max-w-7xl items-start px-4 pt-6 pb-10 sm:px-6 lg:px-8 lg:pt-10">
+                    <div className="grid w-full items-start gap-10 lg:grid-cols-2">
                         {children}
                     </div>
                 </div>

@@ -66,7 +66,7 @@ export default function AuthHero({ variant }: AuthHeroProps) {
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
-            className="hidden lg:flex flex-col gap-0 relative"
+            className="hidden lg:flex flex-col gap-0 relative -mt-2 lg:-mt-4"
         >
             <motion.div variants={slideUp} className="mb-8">
                 <span className="inline-flex items-center rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
