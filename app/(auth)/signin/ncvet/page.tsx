@@ -7,7 +7,9 @@ export default function NcvetSignInPage() {
             variant="ncvet"
             title="Welcome back"
             subtitle="Sign in to your NCVET learner portal"
-            portalLabel="NCVET Learner Portal"
+            portalLabel="NCVET Student Portal"
+            secondaryLogoSrc="/images/ncvet-logo.png"
+            secondaryLogoAlt="NCVET logo"
         >
             <NcvetLoginForm />
         </AuthPageShell>

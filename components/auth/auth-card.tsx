@@ -9,6 +9,8 @@ type AuthCardProps = {
     subtitle: string;
     portalLabel: string;
     children: React.ReactNode;
+    secondaryLogoSrc?: string;
+    secondaryLogoAlt?: string;
 };
 
 export default function AuthCard({
@@ -16,6 +18,8 @@ export default function AuthCard({
     subtitle,
     portalLabel,
     children,
+    secondaryLogoSrc,
+    secondaryLogoAlt = "Secondary logo",
 }: AuthCardProps) {
     return (
         <motion.div
@@ -26,15 +30,31 @@ export default function AuthCard({
         >
             <div className="card p-6 sm:p-8">
                 <div className="mb-6">
-                    <div className="mb-4 flex items-center gap-3">
-                        <Image
-                            src="/images/scoa-logo.png"
-                            width={48}
-                            height={48}
-                            alt="SCOA logo"
-                            className="h-12 w-auto"
-                        />
-                        <span className="badge-admin-accent">{portalLabel}</span>
+                    <div className="mb-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <Image
+                                src="/images/scoa-logo.png"
+                                width={48}
+                                height={48}
+                                alt="SCOA logo"
+                                className="h-12 w-auto object-contain"
+                            />
+
+                            {secondaryLogoSrc ? (
+                                <>
+                                    <span className="h-8 w-px bg-border" />
+                                    <Image
+                                        src={secondaryLogoSrc}
+                                        width={60}
+                                        height={60}
+                                        alt={secondaryLogoAlt}
+                                        className="h-12 w-auto object-contain"
+                                    />
+                                </>
+                            ) : null}
+                        </div>
+
+                        <span className="badge-admin-accent shrink-0">{portalLabel}</span>
                     </div>
 
                     <h2 className="text-2xl font-bold text-foreground">{title}</h2>

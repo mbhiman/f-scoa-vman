@@ -10,6 +10,8 @@ type AuthPageShellProps = {
     subtitle: string;
     portalLabel: string;
     children: React.ReactNode;
+    secondaryLogoSrc?: string;
+    secondaryLogoAlt?: string;
 };
 
 export default function AuthPageShell({
@@ -18,11 +20,19 @@ export default function AuthPageShell({
     subtitle,
     portalLabel,
     children,
+    secondaryLogoSrc,
+    secondaryLogoAlt,
 }: AuthPageShellProps) {
     return (
         <AuthLayout>
             <AuthHero variant={variant} />
-            <AuthCard title={title} subtitle={subtitle} portalLabel={portalLabel}>
+            <AuthCard
+                title={title}
+                subtitle={subtitle}
+                portalLabel={portalLabel}
+                secondaryLogoSrc={secondaryLogoSrc}
+                secondaryLogoAlt={secondaryLogoAlt}
+            >
                 {children}
             </AuthCard>
         </AuthLayout>

@@ -6,8 +6,10 @@ export default function NcvetSignUpPage() {
     <AuthPageShell
       variant="ncvet"
       title="Create your account"
-      subtitle="Register as an NCVET Learners"
-      portalLabel="NCVET Learners Portal"
+      subtitle="Register as an NCVET student"
+      portalLabel="NCVET Student Portal"
+      secondaryLogoSrc="/images/ncvet-logo.png"
+      secondaryLogoAlt="NCVET logo"
     >
       <NcvetSignupForm />
     </AuthPageShell>
