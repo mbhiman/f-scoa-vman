@@ -20,9 +20,7 @@
   --border: #DDE4EE;
   --border-hover: #BBC8D8;
 
-  /* =========================
-     ADMIN TOKENS
-  ========================== */
+  /* Admin */
   --admin-bg: #F8FAFC;
   --admin-card: #FFFFFF;
   --admin-sidebar: #FFFFFF;
@@ -35,14 +33,29 @@
   --admin-primary-hover: #0044ff;
   --admin-accent-soft: rgba(249, 115, 22, 0.1);
 
-  /* =========================
-     FONTS
-  ========================== */
+  /* Fonts */
   --font-primary: var(--font-geist-sans);
   --font-heading: var(--font-sora);
   --font-ui: var(--font-jakarta);
   --font-mono: var(--font-geist-mono);
   --font-code: var(--font-fira-code);
+
+  /* Runtime token mappings */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
 }
 
 /* =========================
@@ -122,6 +135,23 @@
   --admin-primary: #4080F8;
   --admin-primary-hover: #5A94FF;
   --admin-accent-soft: rgba(251, 146, 60, 0.1);
+
+  /* Runtime token mappings */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
 }
 
 /* =========================
@@ -138,12 +168,18 @@ body {
    TYPOGRAPHY
 ========================= */
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading), var(--font-primary), sans-serif;
   letter-spacing: -0.02em;
 }
 
-code, pre {
+code,
+pre {
   font-family: var(--font-code), var(--font-mono), monospace;
 }
 
@@ -160,8 +196,6 @@ code, pre {
 ========================= */
 
 @layer utilities {
-
-  /* BUTTONS */
   .btn {
     @apply inline-flex items-center justify-center rounded-lg font-medium transition-all cursor-pointer;
   }
@@ -170,22 +204,18 @@ code, pre {
     @apply bg-primary text-white px-5 py-3 hover:bg-primary-hover active:scale-95;
   }
 
-  /* CARD */
   .card {
     @apply rounded-2xl border border-border bg-background shadow-lg;
   }
 
-  /* INPUT */
   .input-field {
     @apply w-full rounded-lg border border-border bg-background py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted focus:border-primary focus:ring-4 focus:ring-primary/20;
   }
 
-  /* ADMIN */
   .admin-card {
     @apply rounded-xl border border-admin-border bg-admin-card shadow-admin-card;
   }
 
-  /* BADGES */
   .badge-success {
     @apply inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-500;
   }
@@ -201,10 +231,6 @@ code, pre {
   .badge-admin-accent {
     @apply inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-admin-accent-soft text-admin-primary;
   }
-
-  /* =========================
-     LEGAL PAGES
-  ========================== */
 
   .legal-shell {
     @apply min-h-screen bg-background text-foreground;
@@ -262,7 +288,6 @@ code, pre {
     @apply font-medium text-foreground hover:underline;
   }
 
-  /* POLICY CHECKBOX */
   .policy-consent {
     @apply rounded-xl border border-border bg-background px-4 py-3;
   }
