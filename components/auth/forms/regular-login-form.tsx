@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useStudentAuthStore } from "@/store/student-auth-store";
 import InputField from "@/components/auth/fields/input-fields";
+import { useDeviceMeta } from "@/hooks/useDeviceMeta";
 import {
     staggerContainer,
     slideUp,
@@ -91,6 +92,8 @@ export default function RegularLoginForm() {
         },
     });
 
+    const { ip, deviceId } = useDeviceMeta();
+
     const handleLogin = async (data: LoginType) => {
         setLoading(true);
         setMessage("");
@@ -100,9 +103,9 @@ export default function RegularLoginForm() {
             password: data.password,
             rememberMe: data.rememberMe ?? false,
             metadata: {
-                ipAddress: "127.0.0.1",
-                deviceId: "web-device",
-            },
+                ipAddress: ip,
+                deviceId: deviceId,
+            }
         };
 
         try {
@@ -140,9 +143,9 @@ export default function RegularLoginForm() {
             otp: cleanOtp,
             rememberMe: rememberMeStore,
             metadata: {
-                ipAddress: "127.0.0.1",
-                deviceId: "web-device",
-            },
+                ipAddress: ip,
+                deviceId: deviceId,
+            }
         };
 
         setLoading(true);

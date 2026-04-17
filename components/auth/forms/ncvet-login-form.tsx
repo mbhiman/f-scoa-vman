@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import InputField from "@/components/auth/fields/input-fields";
+import { useDeviceMeta } from "@/hooks/useDeviceMeta";
 import { useStudentAuthStore } from "@/store/student-auth-store";
 import {
     staggerContainer,
@@ -80,9 +81,12 @@ export default function NcvetLoginForm() {
         },
     });
 
+    const { ip, deviceId } = useDeviceMeta();
+
     const handleLogin = async (data: LoginType) => {
         setLoading(true);
         setMessage("");
+
 
         try {
             const res = await fetch(`${BASE_URL}/student/auth/login`, {
@@ -93,9 +97,9 @@ export default function NcvetLoginForm() {
                     mobile: data.mobile,
                     password: data.password,
                     metadata: {
-                        ipAddress: "127.0.0.1",
-                        deviceId: "web-device",
-                    },
+                        ipAddress: ip,
+                        deviceId: deviceId,
+                    }
                 }),
             });
 
@@ -132,8 +136,8 @@ export default function NcvetLoginForm() {
                     mobile: mobileStore,
                     otp: cleanOtp,
                     metadata: {
-                        ipAddress: "127.0.0.1",
-                        deviceId: "web-device",
+                        ipAddress: ip,
+                        deviceId: deviceId,
                     },
                 }),
             });

@@ -1,48 +1,194 @@
 "use client";
 
+import React, { useEffect, useMemo, useState } from "react";
 import { useStudentAuthStore } from "@/store/student-auth-store";
-import React, { useEffect } from "react";
+import ThemeToggle from "@/components/common/theme-toggle";
 
-function LearnerDashboard() {
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+type StudentProfile = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  mobile: string;
+  email: string | null;
+  isVerified: boolean;
+  isActive: boolean;
+  lastLoginAt: string | null;
+};
+
+type StudentProfileResponse = {
+  success: boolean;
+  message: string;
+  data: StudentProfile;
+};
+
+function formatDateTime(value: string | null) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="text-xs text-muted">{label}</p>
+      <p className="text-sm font-medium text-foreground">{value}</p>
+    </div>
+  );
+}
+
+export default function LearnerDashboard() {
   const accessToken = useStudentAuthStore((state) => state.accessToken);
-  const isExpiredFn = useStudentAuthStore((state) => state.isExpired);
+  const isExpired = useStudentAuthStore((state) => state.isExpired());
 
-  const isExpired = isExpiredFn();
+  const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [apiMessage, setApiMessage] = useState("");
+  const [error, setError] = useState("");
 
-  /* ================= DEBUG LOGS ================= */
+  const fullName = useMemo(() => {
+    if (!profile) return "";
+    return `${profile.firstName} ${profile.lastName}`.trim();
+  }, [profile]);
+
   useEffect(() => {
-    console.log("====== DASHBOARD DEBUG ======");
-    console.log("Access Token:", accessToken);
-    console.log("Is Expired:", isExpired);
-    console.log("================================");
+    if (!accessToken || isExpired) return;
+
+    const fetchProfile = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const res = await fetch(`${BASE_URL}/student/me`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        const json: StudentProfileResponse = await res.json();
+
+        if (!json.success) {
+          setError(json.message);
+          return;
+        }
+
+        setProfile(json.data);
+        setApiMessage(json.message);
+      } catch {
+        setError("Failed to load profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
   }, [accessToken, isExpired]);
 
   /* ================= STATES ================= */
 
   if (!accessToken) {
-    console.log("No token found → user not logged in");
-    return <h1 className="text-center mt-10">Not Logged In ❌</h1>;
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <div className="card p-6 text-center">
+          <h1 className="text-xl font-bold">Not Logged In ❌</h1>
+        </div>
+      </div>
+    );
   }
 
   if (isExpired) {
-    console.log("Token expired → show session expired");
-    return <h1 className="text-center mt-10">Session Expired ⏳</h1>;
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <div className="card p-6 text-center">
+          <h1 className="text-xl font-bold">Session Expired ⏳</h1>
+        </div>
+      </div>
+    );
   }
 
-  /* ================= MAIN UI ================= */
+  /* ================= UI ================= */
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">Learner Dashboard</h1>
+    <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
 
-      <div className="bg-admin-card border border-border p-4 rounded-lg">
-        <p className="text-sm text-muted mb-2">Access Token:</p>
-        <p className="text-xs break-all text-accent">
-          {accessToken}
-        </p>
+      {/* HEADER */}
+      <div>
+        <p className="text-sm text-muted">Learner Dashboard</p>
+        <h1 className="text-3xl font-bold text-foreground mt-1">
+          {profile ? `Welcome back, ${fullName}` : "Loading..."}
+        </h1>
+        <ThemeToggle/>
       </div>
+
+      {loading ? (
+        <div className="card p-6">Loading profile...</div>
+      ) : error ? (
+        <div className="card p-6 text-red-500">{error}</div>
+      ) : profile && (
+        <>
+          {/* PROFILE HERO CARD */}
+          <div className="card p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold">{fullName}</h2>
+              <p className="text-sm text-muted">{profile.email || "No email"}</p>
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              <span className={profile.isVerified ? "badge-success" : "badge-error"}>
+                {profile.isVerified ? "Verified" : "Not Verified"}
+              </span>
+              <span className={profile.isActive ? "badge-admin-accent" : "badge-muted"}>
+                {profile.isActive ? "Active" : "Inactive"}
+              </span>
+            </div>
+          </div>
+
+          {/* GRID */}
+          <div className="grid gap-6 md:grid-cols-2">
+
+            {/* PERSONAL INFO */}
+            <div className="card p-6 space-y-4">
+              <h3 className="text-lg font-semibold">Personal Information</h3>
+
+              <InfoItem label="Student ID" value={profile.id} />
+              <InfoItem label="Mobile" value={profile.mobile} />
+              <InfoItem label="Email" value={profile.email || "—"} />
+            </div>
+
+            {/* ACCOUNT INFO */}
+            <div className="card p-6 space-y-4">
+              <h3 className="text-lg font-semibold">Account Details</h3>
+
+              <InfoItem
+                label="Verification"
+                value={profile.isVerified ? "Verified" : "Not Verified"}
+              />
+              <InfoItem
+                label="Status"
+                value={profile.isActive ? "Active" : "Inactive"}
+              />
+              <InfoItem
+                label="Last Login"
+                value={formatDateTime(profile.lastLoginAt)}
+              />
+            </div>
+          </div>
+
+          {/* SYSTEM INFO */}
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold">System Status</h3>
+            <p className="text-sm text-muted mt-2">
+              {apiMessage || "Profile loaded successfully"}
+            </p>
+          </div>
+        </>
+      )}
     </div>
   );
 }
-
-export default LearnerDashboard;
