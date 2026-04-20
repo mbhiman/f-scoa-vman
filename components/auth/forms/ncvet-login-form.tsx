@@ -9,6 +9,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import InputField from "@/components/auth/fields/input-fields";
 import { useDeviceMeta } from "@/hooks/useDeviceMeta";
+import ForgotPasswordDialog from "@/components/auth/forms/forgot-password-dialog";
 import {
     staggerContainer,
     slideUp,
@@ -61,6 +62,7 @@ export default function NcvetLoginForm() {
     const [step, setStep] = React.useState<"login" | "otp">("login");
     const [loading, setLoading] = React.useState(false);
     const [message, setMessage] = React.useState("");
+    const [forgotOpen, setForgotOpen] = React.useState(false);
     const [mobileStore, setMobileStore] = React.useState("");
 
     const loginForm = useForm<LoginType>({
@@ -225,6 +227,16 @@ export default function NcvetLoginForm() {
                         </motion.button>
                     </motion.div>
 
+                    <motion.div variants={slideUp} className="flex items-center justify-end">
+                        <button
+                            type="button"
+                            onClick={() => setForgotOpen(true)}
+                            className="text-sm font-medium text-primary hover:underline"
+                        >
+                            Forgot password?
+                        </button>
+                    </motion.div>
+
                     <motion.div variants={slideUp} className="text-center">
                         <p className="text-sm text-muted">
                             Don&apos;t have an account?{" "}
@@ -279,6 +291,12 @@ export default function NcvetLoginForm() {
                     </motion.div>
                 </form>
             )}
+
+            <ForgotPasswordDialog
+                open={forgotOpen}
+                onOpenChange={setForgotOpen}
+                initialMobile={loginForm.watch("mobile")}
+            />
         </motion.div>
     );
 }

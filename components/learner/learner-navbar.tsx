@@ -24,8 +24,8 @@ const navItems: NavItem[] = [
     icon: <Home className="h-4 w-4" />,
   },
   {
-    href: "/learner/courses",
-    label: "Courses",
+    href: "/learner/quiz",
+    label: "quiz",
     description: "Your learning journey",
     icon: <BookOpen className="h-4 w-4" />,
   },
@@ -118,12 +118,13 @@ export default function LearnerNavbar() {
             type="button"
             onClick={handleLogout}
             className={[
-              "hidden md:inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors",
-              "hover:border-border-hover hover:bg-background",
-              "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+              "hidden md:inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold",
+              "bg-red-600 text-primary-foreground shadow-sm shadow-primary/10",
+              "hover:bg-red-500 hover:shadow-primary/20 active:bg-primary/85",
+              "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             ].join(" ")}
           >
-            <LogOut className="h-4 w-4 text-muted" aria-hidden="true" />
+            <LogOut className="h-4 w-4 text-primary-foreground/90" aria-hidden="true" />
             Logout
           </button>
 

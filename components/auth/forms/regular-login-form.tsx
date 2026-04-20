@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import InputField from "@/components/auth/fields/input-fields";
 import { useDeviceMeta } from "@/hooks/useDeviceMeta";
+import ForgotPasswordDialog from "@/components/auth/forms/forgot-password-dialog";
 import {
     staggerContainer,
     slideUp,
@@ -70,6 +71,7 @@ export default function RegularLoginForm() {
     const [step, setStep] = React.useState<"login" | "otp">("login");
     const [loading, setLoading] = React.useState(false);
     const [message, setMessage] = React.useState("");
+    const [forgotOpen, setForgotOpen] = React.useState(false);
     const [mobileStore, setMobileStore] = React.useState("");
     const [rememberMeStore, setRememberMeStore] = React.useState(false);
 
@@ -237,9 +239,13 @@ export default function RegularLoginForm() {
                             <span>Remember me</span>
                         </label>
 
-                        <Link href="#" className="text-sm font-medium text-primary hover:underline">
+                        <button
+                            type="button"
+                            onClick={() => setForgotOpen(true)}
+                            className="text-sm font-medium text-primary hover:underline"
+                        >
                             Forgot password?
-                        </Link>
+                        </button>
                     </motion.div>
 
                     <motion.div variants={slideUp}>
@@ -314,6 +320,12 @@ export default function RegularLoginForm() {
                     </motion.div>
                 </form>
             )}
+
+            <ForgotPasswordDialog
+                open={forgotOpen}
+                onOpenChange={setForgotOpen}
+                initialMobile={loginForm.watch("mobile")}
+            />
         </motion.div>
     );
 }
