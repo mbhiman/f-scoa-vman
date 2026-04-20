@@ -1,4 +1,4 @@
-import AdminCourseBuilder from '@/components/admin/AdminCourseBuilder'
+import AdminCourseBuilder from '@/components/course-builder/AdminCourseBuilder'
 import React from 'react'
 
 function CoursesPage() {
