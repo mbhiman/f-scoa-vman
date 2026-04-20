@@ -23,11 +23,19 @@ export function WizardStepper({ currentStep, courseId, onStepClick }: WizardStep
                 {stepsList.map((s, idx) => {
                     const isActive = currentStep === s.num;
                     const isCompleted = currentStep > s.num;
+                    const isLocked = s.num === 1 && !!courseId; // no "update course" endpoint in v2 contract
                     return (
                         <React.Fragment key={s.num}>
                             <div
-                                className={`flex flex-col items-center gap-2 cursor-pointer transition-colors ${isActive ? "text-admin-primary" : isCompleted ? "text-admin-fg" : "text-admin-muted-foreground"}`}
-                                onClick={() => { if (courseId || s.num === 1) onStepClick(s.num); }}
+                                className={[
+                                    "flex flex-col items-center gap-2 transition-colors",
+                                    isLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+                                    isActive ? "text-admin-primary" : isCompleted ? "text-admin-fg" : "text-admin-muted-foreground",
+                                ].join(" ")}
+                                onClick={() => {
+                                    if (isLocked) return;
+                                    if (courseId || s.num === 1) onStepClick(s.num);
+                                }}
                             >
                                 <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${isActive ? "border-admin-primary bg-admin-primary/10" : isCompleted ? "border-admin-fg bg-admin-fg text-admin-bg" : "border-admin-border bg-admin-bg"}`}>
                                     <s.icon className="w-4 h-4" />

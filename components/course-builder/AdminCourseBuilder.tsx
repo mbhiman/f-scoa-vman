@@ -48,6 +48,11 @@ export default function AdminCourseBuilder() {
     const [editMode, setEditMode] = useState(false);
     const [courseData, setCourseData] = useState<any>(null);
 
+    const requireCourseId = () => {
+        if (!courseId) throw new Error("Course not initialized yet. Please complete Basic Info first.");
+        return courseId;
+    };
+
     // Load Full Course Data for Edit Mode or Review Step
     const loadFullCourseData = async (id: string) => {
         setError(""); setSuccess("");
@@ -56,7 +61,7 @@ export default function AdminCourseBuilder() {
                 setCourseData({ course: { id, title: "Demo Course" } });
                 return;
             }
-            const res = await authFetch(`/api/admin/courses/${id}/full`);
+            const res = await authFetch(`/admin/courses/${id}/full`);
             const json = await res.json();
             if (!json.success) throw new Error(json.message);
             setCourseData(json.data);
@@ -86,7 +91,7 @@ export default function AdminCourseBuilder() {
                 setCourseId(`demo-${Date.now()}`); setStep(2);
                 setSuccess("DEMO: Course created. Continue to enrollment form."); return;
             }
-            const res = await authFetch(`/api/admin/courses`, { method: "POST", body: formData });
+            const res = await authFetch(`/admin/courses`, { method: "POST", body: formData });
             const json = await res.json();
             if (!json.success) throw new Error(json.message);
 
@@ -100,11 +105,13 @@ export default function AdminCourseBuilder() {
         setError(""); setSuccess("");
         try {
             if (DEMO_MODE) { setStep(3); setSuccess("DEMO: Enrollment saved."); return; }
-            const res = await authFetch(`/api/admin/courses/${courseId}/enrollment-form`, {
+            const id = requireCourseId();
+            const res = await authFetch(`/admin/courses/${id}/enrollment-form`, {
                 method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.message);
+            await loadFullCourseData(id);
             setStep(3); setSuccess("Enrollment form saved.");
         } catch (e: any) { setError(e?.message ?? "Failed to save enrollment"); }
     };
@@ -113,11 +120,13 @@ export default function AdminCourseBuilder() {
         setError(""); setSuccess("");
         try {
             if (DEMO_MODE) { setStep(4); setSuccess("DEMO: Quiz saved."); return; }
-            const res = await authFetch(`/api/admin/courses/${courseId}/quiz`, {
+            const id = requireCourseId();
+            const res = await authFetch(`/admin/courses/${id}/quiz`, {
                 method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.message);
+            await loadFullCourseData(id);
             setStep(4); setSuccess("Quiz saved.");
         } catch (e: any) { setError(e?.message ?? "Failed to save quiz"); }
     };
@@ -126,11 +135,13 @@ export default function AdminCourseBuilder() {
         setError(""); setSuccess("");
         try {
             if (DEMO_MODE) { setStep(5); setSuccess("DEMO: Exam settings saved."); return; }
-            const res = await authFetch(`/api/admin/courses/${courseId}/exam-settings`, {
+            const id = requireCourseId();
+            const res = await authFetch(`/admin/courses/${id}/exam-settings`, {
                 method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.message);
+            await loadFullCourseData(id);
             setStep(5); setSuccess("Exam settings saved.");
         } catch (e: any) { setError(e?.message ?? "Failed to save exam settings"); }
     };
@@ -144,11 +155,12 @@ export default function AdminCourseBuilder() {
                 setSuccess("DEMO: Certificate uploaded. Ready for review.");
                 return;
             }
-            const res = await authFetch(`/api/admin/courses/${courseId}/certificate`, { method: "POST", body: formData });
+            const id = requireCourseId();
+            const res = await authFetch(`/admin/courses/${id}/certificate`, { method: "POST", body: formData });
             const json = await res.json();
             if (!json.success) throw new Error(json.message);
 
-            await loadFullCourseData(courseId!); // Load fresh data for Step 6 Review
+            await loadFullCourseData(id); // Load fresh data for Step 6 Review
             setStep(6); setSuccess("Certificate uploaded. Please review your course.");
         } catch (e: any) { setError(e?.message ?? "Failed to upload certificate"); }
     };
@@ -157,11 +169,13 @@ export default function AdminCourseBuilder() {
         setError(""); setSuccess("");
         try {
             if (DEMO_MODE) { setSuccess("DEMO: Course published."); return; }
-            const res = await authFetch(`/api/admin/courses/${courseId}/status`, {
+            const id = requireCourseId();
+            const res = await authFetch(`/admin/courses/${id}/status`, {
                 method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "PUBLISHED" }),
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.message);
+            await loadFullCourseData(id);
             setSuccess("Course published successfully!");
         } catch (e: any) { setError(e?.message ?? "Failed to publish course"); }
     };
