@@ -65,33 +65,29 @@ export default function NotificationTable({
   return (
     <div className="admin-card overflow-hidden">
       <div className="overflow-x-auto">
-      <table className="w-full min-w-[900px] text-left text-sm">
-        <thead className="border-b border-admin-border bg-admin-primary/5 text-xs uppercase tracking-wide text-admin-muted-foreground">
-          <tr>
-            <th className="px-4 py-3">Channel</th>
-            <th className="px-4 py-3">Template</th>
-            <th className="px-4 py-3">Recipient</th>
-            <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3">Activity Time</th>
-            <th className="px-4 py-3 text-right">Action</th>
-          </tr>
-        </thead>
+        <table className="w-full min-w-[900px] text-left text-sm">
+          <thead className="sticky top-0 z-10 border-b border-admin-border bg-admin-card/95 text-xs uppercase tracking-wide text-admin-muted-foreground backdrop-blur">
+            <tr>
+              <th className="px-4 py-3">Channel</th>
+              <th className="px-4 py-3">Template</th>
+              <th className="px-4 py-3">Recipient</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Activity Time</th>
+              <th className="px-4 py-3 text-right">Action</th>
+            </tr>
+          </thead>
 
-        <motion.tbody
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="divide-y divide-admin-border"
-        >
-          {data.map((item: any) => (
-            <NotificationRow
-              key={item.id}
-              item={item}
-              onView={onView}
-            />
-          ))}
-        </motion.tbody>
-      </table>
+          <motion.tbody
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="divide-y divide-admin-border"
+          >
+            {data.map((item: Notification) => (
+              <NotificationRow key={item.id} item={item} onView={onView} />
+            ))}
+          </motion.tbody>
+        </table>
       </div>
     </div>
   );

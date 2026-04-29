@@ -48,6 +48,32 @@ export type PaginationMeta = {
   hasPrev: boolean;
 };
 
+const clearAdminSessionAndRedirect = () => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
+    localStorage.removeItem("adminExpiresIn");
+    localStorage.removeItem("adminExpiresAt");
+  } catch {
+    // ignore storage failures
+  }
+
+  // Keep it simple + reliable even outside Next router context.
+  try {
+    window.location.assign("/signin/admin");
+  } catch {
+    // ignore redirect failures
+  }
+};
+
+const buildAdminAuthHeaders = () => {
+  const headers = new Headers();
+  if (typeof window === "undefined") return headers;
+  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return headers;
+};
+
 const buildQueryString = (filters: NotificationFilters) => {
   const params = new URLSearchParams();
 
@@ -60,12 +86,14 @@ const buildQueryString = (filters: NotificationFilters) => {
 };
 
 export const fetchNotificationDetail = async (id: number): Promise<Notification> => {
-  const token = typeof window !== "undefined" ? localStorage.getItem(ADMIN_TOKEN_KEY) : null;
-  const headers = new Headers();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-
+  const headers = buildAdminAuthHeaders();
   const res = await fetch(`${BASE_URL}/admin/notifications/${id}`, { headers });
   const json = await res.json();
+
+  if (res.status === 401) {
+    clearAdminSessionAndRedirect();
+    throw new Error("Session expired. Please sign in again.");
+  }
 
   if (!res.ok || !json.success) {
     throw new Error(json.message || "Failed to fetch notification log.");
@@ -85,9 +113,7 @@ export const useNotifications = (filters: NotificationFilters) => {
       setLoading(true);
       setError("");
 
-      const token = typeof window !== "undefined" ? localStorage.getItem(ADMIN_TOKEN_KEY) : null;
-      const headers = new Headers();
-      if (token) headers.set("Authorization", `Bearer ${token}`);
+      const headers = buildAdminAuthHeaders();
 
       const query = buildQueryString(filters);
       const res = await fetch(`${BASE_URL}/admin/notifications?${query}`, {
@@ -96,6 +122,11 @@ export const useNotifications = (filters: NotificationFilters) => {
       });
 
       const json = await res.json();
+
+      if (res.status === 401) {
+        clearAdminSessionAndRedirect();
+        throw new Error("Session expired. Please sign in again.");
+      }
 
       if (!res.ok || !json.success) {
         throw new Error(json.message || "Failed to fetch notification logs.");
