@@ -4,9 +4,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useListCourses, type Course } from "@/hooks/studentCourses/useListCourses";
 import { buttonHover, buttonTap, fadeIn, scaleIn, slideUp, staggerContainer } from "@/lib/animation/animations";
+import { CourseAlert, courseUi } from "./course-ui";
 
 type DropdownOption<T extends string> = { value: T; label: string };
 
@@ -69,11 +70,12 @@ function FancyDropdown<T extends string>({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={[
-          "group flex h-11 w-full items-center justify-between gap-3 rounded-2xl border bg-background px-4 text-left",
-          "transition-all duration-200",
+          "group flex h-12 w-full items-center justify-between gap-3 rounded-2xl border bg-background px-4 text-left",
+          "transition-[border-color,box-shadow,background-color] duration-200",
           "border-border shadow-sm hover:border-border-hover hover:shadow-md",
-          "focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary",
-          open ? "border-primary shadow-md" : "",
+          courseUi.focusRing,
+          "focus:border-primary",
+          open ? "border-primary shadow-md ring-2 ring-primary/15" : "",
         ].join(" ")}
       >
         <span className="truncate text-sm font-medium text-foreground">{active?.label ?? "Select"}</span>
@@ -91,58 +93,62 @@ function FancyDropdown<T extends string>({
         </span>
       </motion.button>
 
-      {open ? (
-        <motion.div
-          initial={{ opacity: 0, y: 8, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 8, scale: 0.98 }}
-          transition={{ duration: 0.16, ease: "easeOut" }}
-          className={[
-            "absolute left-0 right-0 z-50 mt-2 w-full overflow-hidden rounded-2xl border border-border bg-background",
-            "shadow-[0_18px_40px_-18px_rgba(2,6,23,0.35)] backdrop-blur",
-          ].join(" ")}
-          role="listbox"
-          aria-label={ariaLabel}
-        >
-          <div className="max-h-72 overflow-auto p-1">
-            {options.map((opt) => {
-              const selected = opt.value === value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  role="option"
-                  aria-selected={selected}
-                  onClick={() => {
-                    onChange(opt.value);
-                    setOpen(false);
-                  }}
-                  className={[
-                    "flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-2 text-sm transition-all",
-                    "hover:bg-primary/8 hover:text-foreground focus:outline-none focus:ring-4 focus:ring-primary/15",
-                    selected ? "bg-primary/10 text-foreground" : "text-muted",
-                  ].join(" ")}
-                >
-                  <span className="truncate">{opt.label}</span>
-                  {selected ? (
-                    <span className="text-primary">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path
-                          d="M20 6 9 17l-5-5"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        </motion.div>
-      ) : null}
+      <AnimatePresence>
+        {open ? (
+          <motion.div
+            key="menu"
+            initial={{ opacity: 0, y: 6, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.985 }}
+            transition={{ duration: 0.17, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className={[
+              "absolute left-0 right-0 z-50 mt-2 w-full origin-top overflow-hidden rounded-2xl border border-border bg-background/95",
+              "shadow-[0_22px_48px_-20px_rgba(2,6,23,0.38)] backdrop-blur-md dark:bg-background/98",
+            ].join(" ")}
+            role="listbox"
+            aria-label={ariaLabel}
+          >
+            <div className="max-h-72 overflow-auto p-1.5">
+              {options.map((opt) => {
+                const selected = opt.value === value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    onClick={() => {
+                      onChange(opt.value);
+                      setOpen(false);
+                    }}
+                    className={[
+                      "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm transition-[background-color,color,transform] duration-150",
+                      "hover:bg-primary/[0.07] hover:text-foreground active:scale-[0.99]",
+                      courseUi.focusRing,
+                      selected ? "bg-primary/10 font-medium text-foreground" : "text-muted",
+                    ].join(" ")}
+                  >
+                    <span className="truncate">{opt.label}</span>
+                    {selected ? (
+                      <span className="text-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path
+                            d="M20 6 9 17l-5-5"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
@@ -261,17 +267,22 @@ export default function AllCourses() {
 
   return (
     <div className="w-full">
-      <motion.div variants={fadeIn} initial="hidden" animate="visible" className="admin-card p-4 sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-1">
-            <h2 className="text-xl font-semibold text-foreground sm:text-2xl">All Courses</h2>
-            <p className="text-sm text-muted">Browse available courses and track your status.</p>
+      <motion.div
+        variants={fadeIn}
+        initial="hidden"
+        animate="visible"
+        className="admin-card overflow-hidden p-4 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.35)] ring-1 ring-black/4 sm:p-7 dark:ring-white/6"
+      >
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-2">
+            <h2 className="font-heading text-xl font-semibold tracking-tight text-foreground sm:text-2xl">All Courses</h2>
+            <p className="max-w-md text-sm leading-relaxed text-muted">Browse available courses and track your progress.</p>
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
-            <div className="relative w-full sm:w-[320px]">
+            <div className="relative w-full sm:w-[min(100%,380px)]">
               <input
-                className="input-field px-10"
+                className={[courseUi.inputElevated, "rounded-2xl py-3.5 pl-11 pr-12", courseUi.focusRing].join(" ")}
                 value={searchInput}
                 onChange={(e) => {
                   setSearchInput(e.target.value);
@@ -313,13 +324,13 @@ export default function AllCourses() {
           </div>
         </div>
 
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex flex-col gap-4 border-t border-border/70 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-muted">
             {showingText ?? (loading ? "Loading courses..." : "")}
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:items-stretch">
               <FancyDropdown
                 ariaLabel="Filter by course type"
                 value={isNcvetFilter}
@@ -354,51 +365,53 @@ export default function AllCourses() {
               />
             </div>
 
-            <motion.button
-              type="button"
-              whileHover={canPrev ? buttonHover : undefined}
-              whileTap={canPrev ? buttonTap : undefined}
-              className="btn rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground transition-all disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={!canPrev}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Prev
-            </motion.button>
-            <div className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted">
-              Page {displayMeta?.page ?? page}
-              {displayMeta?.totalPages ? ` / ${displayMeta.totalPages}` : ""}
+            <div className="flex items-center gap-1 rounded-2xl border border-border/80 bg-muted/15 p-1 shadow-inner">
+              <motion.button
+                type="button"
+                whileHover={canPrev ? buttonHover : undefined}
+                whileTap={canPrev ? buttonTap : undefined}
+                className={[
+                  "btn min-h-10 min-w-18 rounded-xl border border-transparent bg-background px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-all",
+                  "hover:border-border-hover disabled:cursor-not-allowed disabled:opacity-50",
+                  courseUi.focusRing,
+                ].join(" ")}
+                disabled={!canPrev}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Prev
+              </motion.button>
+              <div className="min-w-28 rounded-xl border border-border/60 bg-background px-3 py-2 text-center text-sm tabular-nums text-muted shadow-sm">
+                <span className="font-medium text-foreground">{displayMeta?.page ?? page}</span>
+                {displayMeta?.totalPages ? (
+                  <span className="text-muted">
+                    {" "}
+                    / {displayMeta.totalPages}
+                  </span>
+                ) : null}
+              </div>
+              <motion.button
+                type="button"
+                whileHover={canNext ? buttonHover : undefined}
+                whileTap={canNext ? buttonTap : undefined}
+                className={[
+                  "btn min-h-10 min-w-18 rounded-xl border border-transparent bg-background px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-all",
+                  "hover:border-border-hover disabled:cursor-not-allowed disabled:opacity-50",
+                  courseUi.focusRing,
+                ].join(" ")}
+                disabled={!canNext}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </motion.button>
             </div>
-            <motion.button
-              type="button"
-              whileHover={canNext ? buttonHover : undefined}
-              whileTap={canNext ? buttonTap : undefined}
-              className="btn rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground transition-all disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={!canNext}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </motion.button>
           </div>
         </div>
 
         {error ? (
-          <motion.div variants={slideUp} initial="hidden" animate="visible" className="mt-6 rounded-xl border border-border bg-background p-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 text-red-500">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path
-                    d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <div className="text-sm font-medium text-foreground">Couldn’t load courses</div>
-                <div className="mt-1 text-sm text-muted">{error}</div>
-              </div>
-            </div>
+          <motion.div variants={slideUp} initial="hidden" animate="visible" className="mt-6">
+            <CourseAlert variant="error" title="Couldn’t load courses">
+              {error}
+            </CourseAlert>
           </motion.div>
         ) : null}
 
@@ -413,15 +426,17 @@ export default function AllCourses() {
                 <motion.div
                   key={`sk-${idx}`}
                   variants={scaleIn}
-                  className="overflow-hidden rounded-2xl border border-border bg-background shadow-lg"
+                  className="overflow-hidden rounded-2xl border border-border/90 bg-background shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] ring-1 ring-black/3"
                 >
-                  <div className="h-36 w-full animate-pulse bg-muted/20" />
-                  <div className="space-y-3 p-4">
-                    <div className="h-4 w-3/4 animate-pulse rounded bg-muted/20" />
-                    <div className="h-3 w-1/2 animate-pulse rounded bg-muted/20" />
-                    <div className="flex gap-2">
-                      <div className="h-5 w-20 animate-pulse rounded-full bg-muted/20" />
-                      <div className="h-5 w-16 animate-pulse rounded-full bg-muted/20" />
+                  <div className="relative h-40 w-full overflow-hidden bg-muted/15">
+                    <div className="absolute inset-0 animate-pulse bg-linear-to-r from-muted/10 via-muted/25 to-muted/10 bg-size-[220%_100%]" />
+                  </div>
+                  <div className="space-y-3 p-4 sm:p-5">
+                    <div className="h-4 w-3/4 animate-pulse rounded-lg bg-muted/25" />
+                    <div className="h-3 w-1/2 animate-pulse rounded-lg bg-muted/20" />
+                    <div className="flex gap-2 pt-1">
+                      <div className="h-6 w-20 animate-pulse rounded-full bg-muted/25" />
+                      <div className="h-6 w-16 animate-pulse rounded-full bg-muted/25" />
                     </div>
                   </div>
                 </motion.div>
@@ -436,9 +451,9 @@ export default function AllCourses() {
                   <motion.div
                     key={course.id}
                     variants={slideUp}
-                    className="group relative overflow-hidden rounded-2xl border border-border bg-background shadow-lg transition-all hover:border-border-hover"
+                    className="group relative overflow-hidden rounded-2xl border border-border/90 bg-background shadow-[0_20px_44px_-32px_rgba(15,23,42,0.45)] ring-1 ring-black/3 transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-0.5 hover:border-border-hover hover:shadow-[0_28px_56px_-32px_rgba(15,23,42,0.5)] dark:ring-white/5"
                   >
-                    <div className="relative h-36 w-full overflow-hidden bg-linear-to-br from-primary/10 via-background to-secondary/15">
+                    <div className="relative h-40 w-full overflow-hidden bg-linear-to-br from-primary/10 via-background to-secondary/15">
                       {course.thumbnailUrl ? (
                         <Image
                           src={course.thumbnailUrl}
@@ -461,20 +476,22 @@ export default function AllCourses() {
                       </div>
                     </div>
 
-                    <div className="p-4">
+                    <div className="p-4 sm:p-5">
                       <div className="flex items-start justify-between gap-3">
-                        <h3 className="line-clamp-2 text-sm font-semibold text-foreground">{course.title}</h3>
+                        <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug tracking-tight text-foreground">
+                          {course.title}
+                        </h3>
                       </div>
-                      <p className="mt-1 line-clamp-1 text-xs text-muted">{subtitle}</p>
+                      <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted">{subtitle}</p>
 
                       <div
-                        className={`mt-4 flex items-center gap-2 ${
+                        className={`mt-5 flex items-center gap-2 ${
                           course.attempt?.status ? "justify-between" : "justify-end"
                         }`}
                       >
                         {course.attempt?.status ? (
                           <div className="text-xs text-muted">
-                            <span className="rounded-md border border-border bg-background px-2 py-1">
+                            <span className="rounded-lg border border-border/80 bg-muted/15 px-2.5 py-1 font-medium">
                               {course.attempt.status.replace("_", " ")}
                             </span>
                           </div>
@@ -485,7 +502,10 @@ export default function AllCourses() {
                             type="button"
                             whileHover={buttonHover}
                             whileTap={buttonTap}
-                            className="btn rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white transition-all hover:bg-primary-hover"
+                            className={[
+                              "btn rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-[transform,background-color] duration-200 hover:bg-primary-hover",
+                              courseUi.focusRing,
+                            ].join(" ")}
                             onClick={() => {
                               router.push(`/learner/courses/${course.id}`);
                             }}
@@ -506,8 +526,13 @@ export default function AllCourses() {
         </motion.div>
 
         {!shouldShowSkeleton && !error && visibleCourses.length === 0 ? (
-          <motion.div variants={slideUp} initial="hidden" animate="visible" className="mt-8 rounded-2xl border border-border bg-background p-8 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <motion.div
+            variants={slideUp}
+            initial="hidden"
+            animate="visible"
+            className="mt-10 rounded-2xl border border-dashed border-border/80 bg-muted/10 p-10 text-center shadow-inner"
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm ring-1 ring-primary/15">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path
                   d="M4 7a2 2 0 0 1 2-2h11a3 3 0 0 1 3 3v11a2 2 0 0 1-2 2H7a3 3 0 0 1-3-3V7Z"
