@@ -216,7 +216,7 @@ export default function AllCourses() {
   const [page, setPage] = useState(1);
   const limit = 12;
 
-  const { data, meta, loading, error, refetch } = useListCourses({ page, limit, search: searchInput.trim() });
+  const { data, meta, loading, error } = useListCourses({ page, limit, search: searchInput.trim() });
   // Keep showing previous results while searching to avoid loader flicker.
   const [stableCourses, setStableCourses] = useState<Course[]>([]);
   const [stableMeta, setStableMeta] = useState<typeof meta>(null);
@@ -398,15 +398,6 @@ export default function AllCourses() {
                 <div className="text-sm font-medium text-foreground">Couldn’t load courses</div>
                 <div className="mt-1 text-sm text-muted">{error}</div>
               </div>
-              <motion.button
-                type="button"
-                whileHover={buttonHover}
-                whileTap={buttonTap}
-                className="btn rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
-                onClick={() => refetch()}
-              >
-                Try again
-              </motion.button>
             </div>
           </motion.div>
         ) : null}
@@ -476,16 +467,18 @@ export default function AllCourses() {
                       </div>
                       <p className="mt-1 line-clamp-1 text-xs text-muted">{subtitle}</p>
 
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="text-xs text-muted">
-                          {course.attempt?.status ? (
+                      <div
+                        className={`mt-4 flex items-center gap-2 ${
+                          course.attempt?.status ? "justify-between" : "justify-end"
+                        }`}
+                      >
+                        {course.attempt?.status ? (
+                          <div className="text-xs text-muted">
                             <span className="rounded-md border border-border bg-background px-2 py-1">
                               {course.attempt.status.replace("_", " ")}
                             </span>
-                          ) : (
-                            <span className="rounded-md border border-border bg-background px-2 py-1">No attempt</span>
-                          )}
-                        </div>
+                          </div>
+                        ) : null}
 
                         <div className="flex items-center gap-2">
                           <motion.button
@@ -525,7 +518,7 @@ export default function AllCourses() {
               </svg>
             </div>
             <div className="mt-3 text-sm font-semibold text-foreground">No courses found</div>
-            <div className="mt-1 text-sm text-muted">Try adjusting your search or refresh the list.</div>
+            <div className="mt-1 text-sm text-muted">Try adjusting your search or filters.</div>
             <div className="mt-5 flex justify-center gap-2">
               <motion.button
                 type="button"
@@ -535,19 +528,9 @@ export default function AllCourses() {
                 onClick={() => {
                   setSearchInput("");
                   setPage(1);
-                  refetch();
                 }}
               >
                 Clear search
-              </motion.button>
-              <motion.button
-                type="button"
-                whileHover={buttonHover}
-                whileTap={buttonTap}
-                className="btn btn-primary"
-                onClick={() => refetch()}
-              >
-                Refresh
               </motion.button>
             </div>
           </motion.div>

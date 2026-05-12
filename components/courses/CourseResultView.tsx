@@ -17,7 +17,7 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export default function CourseResultView({ courseId }: { courseId: string }) {
-  const { attempt, questions, notSubmittedYet, examNotStarted, loading, error, refetch } = useGetExamResult(courseId);
+  const { attempt, questions, notSubmittedYet, examNotStarted, loading, error } = useGetExamResult(courseId);
 
   const title = "Result";
   const subtitle = loading
@@ -35,14 +35,9 @@ export default function CourseResultView({ courseId }: { courseId: string }) {
       title={title}
       subtitle={subtitle}
       actions={
-        <>
-          <button type="button" className="btn btn-primary" onClick={refetch} disabled={loading}>
-            Refetch
-          </button>
-          <Link className="btn btn-primary" href={`/courses/${courseId}`}>
-            Back
-          </Link>
-        </>
+        <Link className="btn btn-primary" href={`/courses/${courseId}`}>
+          Back
+        </Link>
       }
     >
       {error ? (

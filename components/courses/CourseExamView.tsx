@@ -18,22 +18,86 @@ function buildInitialSelections(questions: { id: string }[]) {
 }
 
 export default function CourseExamView({ courseId }: { courseId: string }) {
+  if (!courseId || typeof courseId !== "string" || courseId.trim() === "") {
+    return (
+      <CoursePageShell
+        title="Exam"
+        subtitle="Missing course id."
+        actions={
+          <Link className="btn btn-primary" href="/learner/courses">
+            Back to courses
+          </Link>
+        }
+      >
+        <div className="rounded-2xl border border-border bg-background p-4 text-sm text-muted">
+          This page was opened without a valid course id.
+        </div>
+      </CoursePageShell>
+    );
+  }
+
   const startExam = useStartExam(courseId);
   const exam = useGetExam(courseId);
   const submitExam = useSubmitExam(courseId);
 
   const [selections, setSelections] = useState<SelectionMap>({});
+  const [clientValidationError, setClientValidationError] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (exam.questions.length === 0) return;
     setSelections((prev) => ({ ...buildInitialSelections(exam.questions), ...prev }));
   }, [exam.questions]);
 
+  // Prune stale selections restored from previous quizzes/attempts.
+  React.useEffect(() => {
+    if (exam.questions.length === 0) return;
+    const allowedQ = new Set(exam.questions.map((q) => q.id));
+    const allowedOptByQ = new Map<string, Set<string>>();
+    exam.questions.forEach((q) => {
+      allowedOptByQ.set(q.id, new Set(q.options.map((o) => o.id)));
+    });
+
+    setSelections((prev) => {
+      const next: SelectionMap = {};
+      Object.entries(prev ?? {}).forEach(([qid, opt]) => {
+        if (!allowedQ.has(qid)) return;
+        if (opt === null) {
+          next[qid] = null;
+          return;
+        }
+        const allowed = allowedOptByQ.get(qid);
+        if (!allowed || !allowed.has(opt)) {
+          next[qid] = null;
+          return;
+        }
+        next[qid] = opt;
+      });
+
+      exam.questions.forEach((q) => {
+        if (!(q.id in next)) next[q.id] = null;
+      });
+
+      return next;
+    });
+  }, [exam.questions]);
+
   const answersPayload = useMemo(() => {
-    return Object.entries(selections)
-      .filter(([, opt]) => typeof opt === "string" && opt.length > 0)
-      .map(([questionId, selectedOptionId]) => ({ questionId, selectedOptionId: selectedOptionId as string }));
-  }, [selections]);
+    // Only submit answers that match the currently loaded quiz.
+    const allowedOptByQ = new Map<string, Set<string>>();
+    exam.questions.forEach((q) => {
+      allowedOptByQ.set(q.id, new Set(q.options.map((o) => o.id)));
+    });
+
+    return exam.questions
+      .map((q) => {
+        const opt = selections[q.id];
+        if (typeof opt !== "string" || opt.length === 0) return null;
+        const allowed = allowedOptByQ.get(q.id);
+        if (!allowed || !allowed.has(opt)) return null;
+        return { questionId: q.id, selectedOptionId: opt };
+      })
+      .filter((x): x is { questionId: string; selectedOptionId: string } => Boolean(x));
+  }, [exam.questions, selections]);
 
   const title = "Exam";
   const errorMessage = exam.error ?? startExam.error ?? submitExam.error;
@@ -56,13 +120,19 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
           <button type="button" className="btn btn-primary" onClick={startExam.start} disabled={startExam.loading}>
             {startExam.loading ? "Starting…" : "Start / Resume"}
           </button>
-          <Link className="btn btn-primary" href={`/courses/${courseId}`}>
+          <Link className="btn btn-primary" href={`/learner/courses/${courseId}`}>
             Back
           </Link>
         </>
       }
     >
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-5">
+        {clientValidationError ? (
+          <motion.div variants={slideUp} className="rounded-xl border border-border bg-red-500/10 px-4 py-3 text-sm text-red-700">
+            {clientValidationError}
+          </motion.div>
+        ) : null}
+
         {(startExam.cooldownActive || startExam.maxAttemptsReached || startExam.alreadyPassed) && (
           <motion.div variants={slideUp} className="rounded-xl border border-border bg-red-500/10 px-4 py-3 text-sm">
             {startExam.alreadyPassed ? (
@@ -88,7 +158,7 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
             {exam.alreadyCompleted ? (
               <p className="text-muted">
                 Exam already completed.{" "}
-                <Link className="underline" href={`/courses/${courseId}/result`}>
+                <Link className="underline" href={`/learner/courses/${courseId}/result`}>
                   View result
                 </Link>
               </p>
@@ -106,7 +176,7 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
                 Submitted. Score: <span className="font-mono">{submitExam.result.score}</span> —{" "}
                 {submitExam.result.passed ? "Passed" : "Failed"}
               </p>
-              <Link className="btn btn-primary" href={`/courses/${courseId}/result`}>
+              <Link className="btn btn-primary" href={`/learner/courses/${courseId}/result`}>
                 View result
               </Link>
             </div>
@@ -115,7 +185,7 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
 
         {exam.questions.length === 0 ? (
           <motion.div variants={slideUp} className="text-sm text-muted">
-            No questions loaded yet. Start/resume the exam, then refetch if needed.
+            No questions loaded yet. Start or resume the exam to load questions.
           </motion.div>
         ) : (
           <motion.div variants={slideUp} className="space-y-4">
@@ -164,7 +234,7 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
             {submitExam.alreadySubmitted ? (
               <div className="rounded-xl border border-border bg-muted/10 px-4 py-3 text-sm text-muted">
                 Exam already submitted.{" "}
-                <Link className="underline" href={`/courses/${courseId}/result`}>
+                <Link className="underline" href={`/learner/courses/${courseId}/result`}>
                   View result
                 </Link>
               </div>
@@ -181,7 +251,18 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
                 type="button"
                 className="btn btn-primary"
                 disabled={!canSubmit}
-                onClick={() => submitExam.submit(answersPayload)}
+                onClick={() => {
+                  setClientValidationError(null);
+                  if (exam.questions.length === 0) {
+                    setClientValidationError("No questions are loaded yet. Click “Start / Resume” first.");
+                    return;
+                  }
+                  if (answersPayload.length === 0) {
+                    setClientValidationError("You haven’t selected any answers yet. Select at least one option before submitting.");
+                    return;
+                  }
+                  void submitExam.submit(answersPayload);
+                }}
               >
                 {submitExam.loading ? "Submitting…" : "Submit exam"}
               </button>

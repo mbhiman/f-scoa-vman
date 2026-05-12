@@ -28,14 +28,14 @@ function NextStepAction({ courseId, nextStep }: { courseId: string; nextStep: st
   }
   if (nextStep === "START" || nextStep === "RESUME") {
     return (
-      <Link className="btn btn-primary" href={`/courses/${courseId}/exam`}>
+      <Link className="btn btn-primary" href={`/learner/courses/${courseId}/exam`}>
         {nextStep === "RESUME" ? "Resume exam" : "Start exam"}
       </Link>
     );
   }
   if (nextStep === "RESULT") {
     return (
-      <Link className="btn btn-primary" href={`/courses/${courseId}/result`}>
+      <Link className="btn btn-primary" href={`/learner/courses/${courseId}/result`}>
         View result
       </Link>
     );
@@ -45,7 +45,7 @@ function NextStepAction({ courseId, nextStep }: { courseId: string; nextStep: st
 }
 
 export default function CourseEntryView({ courseId }: { courseId: string }) {
-  const { course, enrollment, attempt, nextStep, loading, error, refetch } = useGetCourseEntry(courseId);
+  const { course, enrollment, attempt, nextStep, loading, error } = useGetCourseEntry(courseId);
 
   const title = course?.title ?? `Course ${courseId}`;
   const subtitle = loading ? "Loading course entry…" : error ? error : "Course entry loaded.";
@@ -54,14 +54,7 @@ export default function CourseEntryView({ courseId }: { courseId: string }) {
     <CoursePageShell
       title={title}
       subtitle={subtitle}
-      actions={
-        <>
-          <button type="button" className="btn btn-primary" onClick={refetch} disabled={loading}>
-            Refetch
-          </button>
-          <NextStepAction courseId={courseId} nextStep={nextStep} />
-        </>
-      }
+      actions={<NextStepAction courseId={courseId} nextStep={nextStep} />}
     >
       {error ? (
         <div className="text-sm text-red-500">{error}</div>

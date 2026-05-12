@@ -155,14 +155,9 @@ export default function CourseEnrollView({ courseId }: { courseId: string }) {
       title={title}
       subtitle={subtitle}
       actions={
-        <>
-          <button type="button" className="btn btn-primary" onClick={formState.refetch} disabled={formState.loading}>
-            Refetch
-          </button>
-          <Link className="btn btn-primary" href={`/courses/${courseId}`}>
-            Back
-          </Link>
-        </>
+        <Link className="btn btn-primary" href={`/courses/${courseId}`}>
+          Back
+        </Link>
       }
     >
       {formState.alreadyEnrolled ? (
