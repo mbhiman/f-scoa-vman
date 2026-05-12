@@ -21,7 +21,7 @@ function NextStepAction({ courseId, nextStep }: { courseId: string; nextStep: st
 
   if (nextStep === "ENROLL") {
     return (
-      <Link className="btn btn-primary" href={`/courses/${courseId}/enroll`}>
+      <Link className="btn btn-primary" href={`/learner/courses/${courseId}/enroll`}>
         Enroll
       </Link>
     );

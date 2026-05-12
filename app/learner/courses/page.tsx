@@ -1,11 +1,12 @@
+import AllCourses from '@/components/courses/AllCourses'
 import React from 'react'
 
-
-
-function AllCoursePage() {
+function AllCoursesPage() {
   return (
-    <div>AllCoursePage</div>
+    <div>
+      <AllCourses />
+    </div>
   )
 }
 
-export default AllCoursePage
+export default AllCoursesPage
