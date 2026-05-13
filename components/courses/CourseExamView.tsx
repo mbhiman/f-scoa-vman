@@ -3,12 +3,27 @@
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { staggerContainer, slideUp } from "@/lib/animation/animations";
+import { scaleIn, slideUpCompact, staggerContainer, slideUp } from "@/lib/animation/animations";
 import CoursePageShell from "./CoursePageShell";
 import { useGetExam, useStartExam, useSubmitExam } from "@/hooks/studentCourses";
 import { CourseAlert, CourseMotionFade, CoursePanelSkeleton, CourseSelectableRow, courseUi } from "./course-ui";
 
 type SelectionMap = Record<string, string | null>;
+
+function parseIsoMs(iso: string | null | undefined) {
+  if (!iso) return null;
+  const ms = Date.parse(iso);
+  return Number.isFinite(ms) ? ms : null;
+}
+
+function formatRemaining(totalSeconds: number) {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = s % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+  return `${m}:${String(r).padStart(2, "0")}`;
+}
 
 function buildInitialSelections(questions: { id: string }[]) {
   const init: SelectionMap = {};
@@ -37,6 +52,26 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
 
   const [selections, setSelections] = useState<SelectionMap>({});
   const [clientValidationError, setClientValidationError] = useState<string | null>(null);
+
+  const expiresAtIso = exam.attempt?.expiresAt ?? startExam.expiresAt ?? null;
+  const expiresAtMs = useMemo(() => parseIsoMs(expiresAtIso), [expiresAtIso]);
+  const [nowMs, setNowMs] = React.useState(() => Date.now());
+
+  const shouldRunTimer =
+    Boolean(resolvedCourseId) &&
+    Boolean(expiresAtMs) &&
+    !exam.examNotStarted &&
+    !exam.noActiveAttempt &&
+    !exam.alreadyCompleted &&
+    !exam.attemptExpired;
+
+  React.useEffect(() => {
+    if (!shouldRunTimer) return;
+
+    setNowMs(Date.now());
+    const id = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [shouldRunTimer]);
 
   React.useEffect(() => {
     if (exam.questions.length === 0) return;
@@ -124,18 +159,69 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
 
   const showExamSkeleton = exam.loading && exam.questions.length === 0;
 
+  const remainingSec = expiresAtMs ? Math.ceil((expiresAtMs - nowMs) / 1000) : null;
+  const expiredByClock = remainingSec !== null && remainingSec <= 0;
+  const showTimer = shouldRunTimer || expiredByClock;
+  const lowTime = remainingSec !== null && remainingSec > 0 && remainingSec <= 60;
+
   return (
     <CoursePageShell
       title={title}
       subtitle={subtitle}
       actions={
         <>
-          <button type="button" className={btnPrimary} onClick={startExam.start} disabled={startExam.loading}>
+          <motion.div variants={slideUpCompact} initial="hidden" animate="visible" className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+            {showTimer ? (
+              <motion.div
+                variants={scaleIn}
+                initial="hidden"
+                animate="visible"
+                className={[
+                  "inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold tracking-tight shadow-sm backdrop-blur-md",
+                  lowTime
+                    ? "border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200"
+                    : expiredByClock || exam.attemptExpired
+                      ? "border-red-500/25 bg-red-500/10 text-red-700 dark:text-red-300"
+                      : "border-primary/20 bg-primary/8 text-foreground",
+                ].join(" ")}
+                aria-live="polite"
+                aria-label="Time remaining"
+              >
+                <span
+                  className={[
+                    "flex size-7 items-center justify-center rounded-lg",
+                    lowTime
+                      ? "bg-amber-500/15 text-amber-700 dark:text-amber-200"
+                      : expiredByClock || exam.attemptExpired
+                        ? "bg-red-500/15 text-red-600 dark:text-red-300"
+                        : "bg-primary/15 text-primary",
+                  ].join(" ")}
+                  aria-hidden
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 6v6l4 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span className="hidden sm:inline text-muted">Time left</span>
+                <span className="font-mono tabular-nums">
+                  {exam.attemptExpired || expiredByClock ? "0:00" : remainingSec === null ? "—" : formatRemaining(remainingSec)}
+                </span>
+              </motion.div>
+            ) : null}
+
+            <button type="button" className={btnPrimary} onClick={startExam.start} disabled={startExam.loading}>
             {startExam.loading ? "Starting…" : "Start / Resume"}
-          </button>
-          <Link className={btnSecondary} href={`/learner/courses/${resolvedCourseId}`}>
-            Back
-          </Link>
+            </button>
+            <Link className={btnSecondary} href={`/learner/courses/${resolvedCourseId}`}>
+              Back
+            </Link>
+          </motion.div>
         </>
       }
     >

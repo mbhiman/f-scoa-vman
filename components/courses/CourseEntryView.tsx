@@ -94,6 +94,10 @@ function NextStepAction({ courseId, nextStep }: { courseId: string; nextStep: st
 
 export default function CourseEntryView({ courseId }: { courseId: string }) {
   const { course, enrollment, attempt, nextStep, loading, error } = useGetCourseEntry(courseId);
+  console.log(course);
+  console.log(enrollment);
+  console.log(attempt);
+  console.log(nextStep);
 
   const title = course?.title ?? "Course overview";
   const subtitle = loading ? "Loading course details…" : error ? error : "Overview and your progress for this course.";

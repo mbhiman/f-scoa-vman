@@ -223,6 +223,7 @@ export default function AllCourses() {
   const limit = 12;
 
   const { data, meta, loading, error } = useListCourses({ page, limit, search: searchInput.trim() });
+  console.log(data);
   // Keep showing previous results while searching to avoid loader flicker.
   const [stableCourses, setStableCourses] = useState<Course[]>([]);
   const [stableMeta, setStableMeta] = useState<typeof meta>(null);
