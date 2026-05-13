@@ -44,7 +44,7 @@ export default function CourseResultView({ courseId }: { courseId: string }) {
       title={title}
       subtitle={subtitle}
       actions={
-        <Link className={btnPrimary} href={`/courses/${courseId}`}>
+        <Link className={btnPrimary} href={`/learner/courses/${courseId}`}>
           Back
         </Link>
       }
@@ -69,7 +69,7 @@ export default function CourseResultView({ courseId }: { courseId: string }) {
           <CourseAlert variant="info" title={notSubmittedYet ? "Not submitted" : "Exam not started"}>
             {notSubmittedYet ? "Submit your exam to see results here." : "Begin the exam to generate a result."}
           </CourseAlert>
-          <Link className={btnPrimary} href={`/courses/${courseId}/exam`}>
+          <Link className={btnPrimary} href={`/learner/courses/${courseId}/exam`}>
             Go to exam
           </Link>
         </div>

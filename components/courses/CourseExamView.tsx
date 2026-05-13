@@ -28,27 +28,12 @@ const btnPrimary = ["btn btn-primary min-h-11 rounded-xl px-6 shadow-sm transiti
 );
 
 export default function CourseExamView({ courseId }: { courseId: string }) {
-  if (!courseId || typeof courseId !== "string" || courseId.trim() === "") {
-    return (
-      <CoursePageShell
-        title="Exam"
-        subtitle="Missing course id."
-        actions={
-          <Link className={btnPrimary} href="/learner/courses">
-            Back to courses
-          </Link>
-        }
-      >
-        <CourseAlert variant="neutral" title="Invalid link">
-          This page was opened without a valid course id.
-        </CourseAlert>
-      </CoursePageShell>
-    );
-  }
+  const resolvedCourseId =
+    typeof courseId === "string" && courseId.trim() !== "" ? courseId.trim() : null;
 
-  const startExam = useStartExam(courseId);
-  const exam = useGetExam(courseId);
-  const submitExam = useSubmitExam(courseId);
+  const startExam = useStartExam(resolvedCourseId);
+  const exam = useGetExam(resolvedCourseId);
+  const submitExam = useSubmitExam(resolvedCourseId);
 
   const [selections, setSelections] = useState<SelectionMap>({});
   const [clientValidationError, setClientValidationError] = useState<string | null>(null);
@@ -107,6 +92,24 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
       .filter((x): x is { questionId: string; selectedOptionId: string } => Boolean(x));
   }, [exam.questions, selections]);
 
+  if (!resolvedCourseId) {
+    return (
+      <CoursePageShell
+        title="Exam"
+        subtitle="Missing course id."
+        actions={
+          <Link className={btnPrimary} href="/learner/courses">
+            Back to courses
+          </Link>
+        }
+      >
+        <CourseAlert variant="neutral" title="Invalid link">
+          This page was opened without a valid course id.
+        </CourseAlert>
+      </CoursePageShell>
+    );
+  }
+
   const title = "Exam";
   const errorMessage = exam.error ?? startExam.error ?? submitExam.error;
   const subtitle = exam.loading
@@ -130,7 +133,7 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
           <button type="button" className={btnPrimary} onClick={startExam.start} disabled={startExam.loading}>
             {startExam.loading ? "Starting…" : "Start / Resume"}
           </button>
-          <Link className={btnSecondary} href={`/learner/courses/${courseId}`}>
+          <Link className={btnSecondary} href={`/learner/courses/${resolvedCourseId}`}>
             Back
           </Link>
         </>
@@ -172,7 +175,7 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
                 {exam.alreadyCompleted ? (
                   <p>
                     Exam already completed.{" "}
-                    <Link className="font-semibold text-primary underline underline-offset-2 hover:text-primary-hover" href={`/learner/courses/${courseId}/result`}>
+                    <Link className="font-semibold text-primary underline underline-offset-2 hover:text-primary-hover" href={`/learner/courses/${resolvedCourseId}/result`}>
                       View result
                     </Link>
                   </p>
@@ -190,7 +193,7 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
                   Score: <span className="font-mono font-semibold">{submitExam.result.score}</span> —{" "}
                   {submitExam.result.passed ? "Passed" : "Failed"}
                 </p>
-                <Link className={`${btnPrimary} w-full sm:w-auto`} href={`/learner/courses/${courseId}/result`}>
+                <Link className={`${btnPrimary} w-full sm:w-auto`} href={`/learner/courses/${resolvedCourseId}/result`}>
                   View result
                 </Link>
               </div>
@@ -265,7 +268,7 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
               <CourseAlert variant="neutral" title="Already submitted">
                 <p>
                   View your outcome on the results page.{" "}
-                  <Link className="font-semibold text-primary underline underline-offset-2" href={`/learner/courses/${courseId}/result`}>
+                  <Link className="font-semibold text-primary underline underline-offset-2" href={`/learner/courses/${resolvedCourseId}/result`}>
                     View result
                   </Link>
                 </p>
