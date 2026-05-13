@@ -18,6 +18,8 @@ export type Course = {
     passed: boolean | null;
     score_percentage?: number | null;
     remaining_attempts?: number | null;
+    max_attempts?: number | null;
+    can_retake?: boolean | null;
   } | null;
 };
 
@@ -121,6 +123,7 @@ export function useListCourses(filters: { page: number; limit: number; search?: 
 
         const res = await fetch(`${API_URL}?${query}`, { headers, signal });
         const json = await safeReadJson(res);
+        console.log("json", json);
 
         if (!res.ok) {
           setData([]);
@@ -176,6 +179,7 @@ export function useListCourses(filters: { page: number; limit: number; search?: 
   }, [fetchCourses, refetchKey, filters.search]);
 
   const refetch = useCallback(() => setRefetchKey((x) => x + 1), []);
+
 
   return { data, meta, loading, error, refetch };
 }

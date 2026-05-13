@@ -223,7 +223,6 @@ export default function AllCourses() {
   const limit = 12;
 
   const { data, meta, loading, error } = useListCourses({ page, limit, search: searchInput.trim() });
-  console.log(data);
   // Keep showing previous results while searching to avoid loader flicker.
   const [stableCourses, setStableCourses] = useState<Course[]>([]);
   const [stableMeta, setStableMeta] = useState<typeof meta>(null);
@@ -471,9 +470,12 @@ export default function AllCourses() {
                         </div>
                       )}
 
-                      <div className="absolute left-3 top-3 flex items-center gap-2">
+                      <div className="absolute left-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-2">
                         <span className={badgeClass}>{stateLabel}</span>
                         {course.isNcvet ? <span className="badge-muted">NCVET</span> : null}
+                        {course.attempt?.can_retake === true ? (
+                          <span className="badge-success">Can retake</span>
+                        ) : null}
                       </div>
                     </div>
 
@@ -491,12 +493,13 @@ export default function AllCourses() {
                         }`}
                       >
                         {course.attempt?.status ? (
-                          <div className="text-xs text-muted">
-                            <span className="rounded-lg border border-border/80 bg-muted/15 px-2.5 py-1 font-medium">
+                          <div className="min-w-0 flex-1 text-xs text-muted">
+                            <span className="inline-block rounded-lg border border-border/80 bg-muted/15 px-2.5 py-1 font-medium text-foreground">
                               {course.attempt.status.replace("_", " ")}
                             </span>
                           </div>
                         ) : null}
+
 
                         <div className="flex items-center gap-2">
                           <motion.button
@@ -513,6 +516,8 @@ export default function AllCourses() {
                           >
                             View
                           </motion.button>
+
+                         
                         </div>
                       </div>
                     </div>

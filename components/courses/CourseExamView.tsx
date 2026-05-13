@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import React, { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import React, { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { scaleIn, slideUpCompact, staggerContainer, slideUp } from "@/lib/animation/animations";
 import CoursePageShell from "./CoursePageShell";
@@ -43,12 +44,14 @@ const btnPrimary = ["btn btn-primary min-h-11 rounded-xl px-6 shadow-sm transiti
 );
 
 export default function CourseExamView({ courseId }: { courseId: string }) {
+  const router = useRouter();
   const resolvedCourseId =
     typeof courseId === "string" && courseId.trim() !== "" ? courseId.trim() : null;
 
   const startExam = useStartExam(resolvedCourseId);
   const exam = useGetExam(resolvedCourseId);
   const submitExam = useSubmitExam(resolvedCourseId);
+  const submitRedirectedRef = useRef(false);
 
   const [selections, setSelections] = useState<SelectionMap>({});
   const [clientValidationError, setClientValidationError] = useState<string | null>(null);
@@ -63,7 +66,9 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
     !exam.examNotStarted &&
     !exam.noActiveAttempt &&
     !exam.alreadyCompleted &&
-    !exam.attemptExpired;
+    !exam.attemptExpired &&
+    !submitExam.loading &&
+    !submitExam.result;
 
   React.useEffect(() => {
     if (!shouldRunTimer) return;
@@ -72,6 +77,18 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
     const id = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [shouldRunTimer]);
+
+  // After POST /start succeeds, GET /exam still has the old snapshot until we refetch.
+  React.useEffect(() => {
+    if (!startExam.attemptId) return;
+    exam.refetch();
+  }, [startExam.attemptId, exam.refetch]);
+
+  React.useEffect(() => {
+    if (!submitExam.result || !resolvedCourseId || submitRedirectedRef.current) return;
+    submitRedirectedRef.current = true;
+    router.push(`/learner/courses/${resolvedCourseId}/result`);
+  }, [submitExam.result, resolvedCourseId, router]);
 
   React.useEffect(() => {
     if (exam.questions.length === 0) return;
@@ -161,7 +178,8 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
 
   const remainingSec = expiresAtMs ? Math.ceil((expiresAtMs - nowMs) / 1000) : null;
   const expiredByClock = remainingSec !== null && remainingSec <= 0;
-  const showTimer = shouldRunTimer || expiredByClock;
+  const showTimer =
+    (shouldRunTimer || expiredByClock) && !submitExam.loading && !submitExam.result;
   const lowTime = remainingSec !== null && remainingSec > 0 && remainingSec <= 60;
 
   return (
@@ -266,22 +284,6 @@ export default function CourseExamView({ courseId }: { courseId: string }) {
                     </Link>
                   </p>
                 ) : null}
-              </div>
-            </CourseAlert>
-          </motion.div>
-        ) : null}
-
-        {submitExam.result ? (
-          <motion.div variants={slideUp}>
-            <CourseAlert variant="success" title="Submitted">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <p>
-                  Score: <span className="font-mono font-semibold">{submitExam.result.score}</span> —{" "}
-                  {submitExam.result.passed ? "Passed" : "Failed"}
-                </p>
-                <Link className={`${btnPrimary} w-full sm:w-auto`} href={`/learner/courses/${resolvedCourseId}/result`}>
-                  View result
-                </Link>
               </div>
             </CourseAlert>
           </motion.div>
