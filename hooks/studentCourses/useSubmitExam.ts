@@ -31,8 +31,9 @@ type ApiEnvelope<T> = {
   error?: { code?: string; details?: ApiErrorDetail[] | Record<string, unknown> | null };
 };
 
+/** Backend validates `option_id` (see 422 details like answers.0.option_id). */
 type ApiSubmitExamRequest = {
-  answers: { question_id: string; selected_option_id: string }[];
+  answers: { question_id: string; option_id: string }[];
 };
 
 type ApiSubmitExamSuccess = {
@@ -132,7 +133,10 @@ export function useSubmitExam(courseId: string | null | undefined) {
       const payload: ApiSubmitExamRequest = {
         // Allow empty answers array (valid per contract)
         answers: Array.isArray(answers)
-          ? answers.map((a) => ({ question_id: a.questionId, selected_option_id: a.selectedOptionId }))
+          ? answers.map((a) => ({
+              question_id: a.questionId,
+              option_id: a.selectedOptionId,
+            }))
           : [],
       };
 

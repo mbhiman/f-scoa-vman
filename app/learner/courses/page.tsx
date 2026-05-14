@@ -1,11 +1,12 @@
-import React from 'react'
+import AllCourses from "@/components/courses/AllCourses";
+import React from "react";
 
-
-
-function AllCoursePage() {
+function AllCoursesPage() {
   return (
-    <div>AllCoursePage</div>
-  )
+    <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+      <AllCourses />
+    </div>
+  );
 }
 
-export default AllCoursePage
+export default AllCoursesPage;
