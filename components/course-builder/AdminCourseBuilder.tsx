@@ -66,22 +66,42 @@ export default function AdminCourseBuilder() {
 
     // --- API Submission Handlers ---
 
-    // 3.1 Create Course
+    // 3.1 Create or Update Course Basic Info
     const handleBasicInfoSubmit = async (formData: FormData, rawValues: any) => {
         setError(""); setSuccess("");
         try {
+            // Save to Zustand instantly
             setDraft("basicInfo", rawValues);
-            const res = await adminAuthFetch(`/admin/courses`, { method: "POST", body: formData });
+
+            let res;
+
+            if (courseId) {
+                // 🔄 UPDATE: If we already have a course ID, we patch the existing record
+                res = await adminAuthFetch(`/admin/courses/${courseId}`, {
+                    method: "PATCH",
+                    body: formData
+                });
+            } else {
+                // ✨ CREATE: If no course ID exists, we create a brand new one
+                res = await adminAuthFetch(`/admin/courses`, {
+                    method: "POST",
+                    body: formData
+                });
+            }
 
             if (!res.ok) throw new Error(await parseApiError(res));
             const json = await res.json();
 
-            setCourseId(json.data.id);
-            try { router.replace(`/admin/courses/${json.data.id}`); } catch { /* ignore */ }
+            // If it was a new creation, lock in the new ID and update the URL silently
+            if (!courseId) {
+                setCourseId(json.data.id);
+                try { router.replace(`/admin/courses/${json.data.id}`); } catch { /* ignore */ }
+            }
+
             setStep(2);
-            setSuccess("Course created. Continue to enrollment.");
+            setSuccess(courseId ? "Course updated. Continue to enrollment." : "Course created. Continue to enrollment.");
         } catch (e: any) {
-            setError(e?.message ?? "Failed to create course");
+            setError(e?.message ?? "Failed to save course basic info");
         }
     };
 
