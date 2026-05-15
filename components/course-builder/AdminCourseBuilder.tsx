@@ -80,7 +80,7 @@ export default function AdminCourseBuilder() {
         reset();
         setEditMode(false);
         setError(""); setSuccess("");
-        try { router.replace("/admin/courses"); } catch { /* ignore */ }
+        try { router.replace("/admin/courses/create"); } catch { /* ignore */ }
     };
 
     // 3.1 Create or Update Course Basic Info
