@@ -60,10 +60,12 @@ export default function CoursesPage() {
       cell: ({ row }) => <span className="font-semibold text-admin-fg">{row.getValue("title")}</span>
     },
     {
-      accessorKey: "isNcvet",
+      // Map the boolean to a string so our generic select filter can match it easily
+      accessorFn: (row) => row.isNcvet ? "true" : "false",
+      id: "isNcvet",
       header: "Type",
       cell: ({ row }) => {
-        const isNcvet = row.getValue("isNcvet");
+        const isNcvet = row.getValue("isNcvet") === "true";
         return (
           <span className={isNcvet ? "badge-admin-accent" : "badge-muted"}>
             {isNcvet ? "NCVET Certified" : "Standard"}
@@ -101,11 +103,6 @@ export default function CoursesPage() {
             title="Edit Course"
           >
             <Edit className="w-4 h-4" />
-          </button>
-          <button
-            className="p-1.5 text-admin-muted-foreground hover:text-admin-fg hover:bg-admin-muted/10 rounded transition-colors"
-          >
-            <MoreHorizontal className="w-4 h-4" />
           </button>
         </div>
       )
