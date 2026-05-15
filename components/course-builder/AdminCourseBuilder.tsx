@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useBuilderStore } from "@/store/course-builder-store";
-import { adminAuthFetch, parseApiError } from "@/lib/admin-api";
+import { useBuilderStore } from "../../store/course-builder-store";
+import { adminAuthFetch, parseApiError } from "../../lib/admin-api";
 
 // UI Components
 import { WizardHeader } from "./ui/WizardHeader";
@@ -35,10 +35,10 @@ export default function AdminCourseBuilder() {
         return courseId;
     };
 
-    // Load Full Course Data for Edit Mode or Review Step
     const loadFullCourseData = async (id: string) => {
         setError(""); setSuccess("");
         try {
+            // Note: Dropped /api per your env config
             const res = await adminAuthFetch(`/admin/courses/${id}/full`);
             if (!res.ok) throw new Error(await parseApiError(res));
 
@@ -49,13 +49,32 @@ export default function AdminCourseBuilder() {
         }
     };
 
+    // 🚨 FIX APPLIED HERE: Smarter routing logic to prevent the double-click bug
     useEffect(() => {
-        if (!routeCourseId || (courseId === routeCourseId && editMode)) return;
+        // 1. Guard against the "/create" route
+        if (!routeCourseId || routeCourseId === "create") {
+            setEditMode(false);
+            // ONLY reset to step 1 if we haven't already generated an ID
+            // This prevents resetting the step while waiting for the Next.js router to update the URL
+            if (!courseId) {
+                setStep(1);
+            }
+            return;
+        }
+
+        // 2. If the URL matches the course ID we just generated in Step 1, 
+        // we successfully created it. Just flag it as edit mode, but DO NOT reset the step.
+        if (courseId === routeCourseId) {
+            if (!editMode) setEditMode(true);
+            return;
+        }
+
+        // 3. Handle a true fresh page load (e.g., admin clicks a course from the data table)
         setEditMode(true);
         void loadFullCourseData(routeCourseId);
-        setStep(2);
+        setStep(1);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [routeCourseId]);
+    }, [routeCourseId, courseId]);
 
     const handleReset = () => {
         reset();
@@ -64,42 +83,35 @@ export default function AdminCourseBuilder() {
         try { router.replace("/admin/courses"); } catch { /* ignore */ }
     };
 
-    // --- API Submission Handlers ---
-
     // 3.1 Create or Update Course Basic Info
     const handleBasicInfoSubmit = async (formData: FormData, rawValues: any) => {
         setError(""); setSuccess("");
         try {
-            // Save to Zustand instantly
             setDraft("basicInfo", rawValues);
 
-            let res;
-
             if (courseId) {
-                // 🔄 UPDATE: If we already have a course ID, we patch the existing record
-                res = await adminAuthFetch(`/admin/courses/${courseId}`, {
-                    method: "PATCH",
-                    body: formData
-                });
-            } else {
-                // ✨ CREATE: If no course ID exists, we create a brand new one
-                res = await adminAuthFetch(`/admin/courses`, {
-                    method: "POST",
-                    body: formData
-                });
+                // Temporary Bypass until backend adds PATCH /admin/courses/:courseId
+                setStep(2);
+                setSuccess("Local draft updated. Proceed to enrollment.");
+                return;
             }
+
+            // Note: Dropped /api per your env config
+            const res = await adminAuthFetch(`/admin/courses`, {
+                method: "POST",
+                body: formData
+            });
 
             if (!res.ok) throw new Error(await parseApiError(res));
             const json = await res.json();
 
-            // If it was a new creation, lock in the new ID and update the URL silently
-            if (!courseId) {
-                setCourseId(json.data.id);
-                try { router.replace(`/admin/courses/${json.data.id}`); } catch { /* ignore */ }
-            }
+            setCourseId(json.data.id);
+            setEditMode(true); // Instantly set to edit mode to safeguard against re-renders
+
+            try { router.replace(`/admin/courses/${json.data.id}`); } catch { /* ignore */ }
 
             setStep(2);
-            setSuccess(courseId ? "Course updated. Continue to enrollment." : "Course created. Continue to enrollment.");
+            setSuccess("Course created. Continue to enrollment.");
         } catch (e: any) {
             setError(e?.message ?? "Failed to save course basic info");
         }
@@ -175,7 +187,7 @@ export default function AdminCourseBuilder() {
 
             if (!res.ok) throw new Error(await parseApiError(res));
 
-            await loadFullCourseData(id); // Reload fresh data for Review step
+            await loadFullCourseData(id);
             setStep(6);
             setSuccess("Certificate uploaded. Please review your course.");
         } catch (e: any) {
@@ -183,7 +195,7 @@ export default function AdminCourseBuilder() {
         }
     };
 
-    // 3.2 Update Course Status
+    // 3.3 Update Course Status
     const handlePublish = async () => {
         setError(""); setSuccess("");
         try {
