@@ -90,13 +90,20 @@ export default function AdminCourseBuilder() {
             setDraft("basicInfo", rawValues);
 
             if (courseId) {
-                // Temporary Bypass until backend adds PATCH /admin/courses/:courseId
+                // 🚨 We are now hitting the PATCH endpoint. 
+                // If the backend team has not built this yet, it will throw a 404 error on your screen.
+                const res = await adminAuthFetch(`/admin/courses/${courseId}`, {
+                    method: "PATCH",
+                    body: formData
+                });
+
+                if (!res.ok) throw new Error(await parseApiError(res));
+
                 setStep(2);
-                setSuccess("Local draft updated. Proceed to enrollment.");
+                setSuccess("Course updated. Proceed to enrollment.");
                 return;
             }
 
-            // Note: Dropped /api per your env config
             const res = await adminAuthFetch(`/admin/courses`, {
                 method: "POST",
                 body: formData
@@ -106,7 +113,7 @@ export default function AdminCourseBuilder() {
             const json = await res.json();
 
             setCourseId(json.data.id);
-            setEditMode(true); // Instantly set to edit mode to safeguard against re-renders
+            setEditMode(true);
 
             try { router.replace(`/admin/courses/${json.data.id}`); } catch { /* ignore */ }
 
