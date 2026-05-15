@@ -38,7 +38,6 @@ export default function AdminCourseBuilder() {
     const loadFullCourseData = async (id: string) => {
         setError(""); setSuccess("");
         try {
-            // Note: Dropped /api per your env config
             const res = await adminAuthFetch(`/admin/courses/${id}/full`);
             if (!res.ok) throw new Error(await parseApiError(res));
 
@@ -49,27 +48,20 @@ export default function AdminCourseBuilder() {
         }
     };
 
-    // 🚨 FIX APPLIED HERE: Smarter routing logic to prevent the double-click bug
     useEffect(() => {
-        // 1. Guard against the "/create" route
         if (!routeCourseId || routeCourseId === "create") {
             setEditMode(false);
-            // ONLY reset to step 1 if we haven't already generated an ID
-            // This prevents resetting the step while waiting for the Next.js router to update the URL
             if (!courseId) {
                 setStep(1);
             }
             return;
         }
 
-        // 2. If the URL matches the course ID we just generated in Step 1, 
-        // we successfully created it. Just flag it as edit mode, but DO NOT reset the step.
         if (courseId === routeCourseId) {
             if (!editMode) setEditMode(true);
             return;
         }
 
-        // 3. Handle a true fresh page load (e.g., admin clicks a course from the data table)
         setEditMode(true);
         void loadFullCourseData(routeCourseId);
         setStep(1);
@@ -83,15 +75,12 @@ export default function AdminCourseBuilder() {
         try { router.replace("/admin/courses/create"); } catch { /* ignore */ }
     };
 
-    // 3.1 Create or Update Course Basic Info
     const handleBasicInfoSubmit = async (formData: FormData, rawValues: any) => {
         setError(""); setSuccess("");
         try {
             setDraft("basicInfo", rawValues);
 
             if (courseId) {
-                // 🚨 We are now hitting the PATCH endpoint. 
-                // If the backend team has not built this yet, it will throw a 404 error on your screen.
                 const res = await adminAuthFetch(`/admin/courses/${courseId}`, {
                     method: "PATCH",
                     body: formData
@@ -124,7 +113,6 @@ export default function AdminCourseBuilder() {
         }
     };
 
-    // 3.4 Create / Replace Enrollment Form
     const handleEnrollmentSubmit = async (data: any) => {
         setError(""); setSuccess("");
         try {
@@ -144,7 +132,6 @@ export default function AdminCourseBuilder() {
         }
     };
 
-    // 3.5 Create / Replace Quiz
     const handleQuizSubmit = async (data: any) => {
         setError(""); setSuccess("");
         try {
@@ -164,7 +151,6 @@ export default function AdminCourseBuilder() {
         }
     };
 
-    // 3.6 Save Exam Settings
     const handleExamSettingsSubmit = async (data: any) => {
         setError(""); setSuccess("");
         try {
@@ -184,7 +170,6 @@ export default function AdminCourseBuilder() {
         }
     };
 
-    // 3.7 Upload Certificate Template
     const handleCertificateSubmit = async (formData: FormData, rawValues: any) => {
         setError(""); setSuccess("");
         try {
@@ -202,7 +187,6 @@ export default function AdminCourseBuilder() {
         }
     };
 
-    // 3.3 Update Course Status
     const handlePublish = async () => {
         setError(""); setSuccess("");
         try {
@@ -221,7 +205,7 @@ export default function AdminCourseBuilder() {
     };
 
     return (
-        <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8 flex flex-col">
             <WizardHeader editMode={editMode} courseId={courseId} onReset={handleReset} />
             <WizardStepper currentStep={step} courseId={courseId} onStepClick={setStep} />
             <StatusBanner error={error} success={success} />

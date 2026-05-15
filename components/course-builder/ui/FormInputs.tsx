@@ -61,7 +61,7 @@ export const TextareaInput = forwardRef<HTMLTextAreaElement, TextareaInputProps>
                 )}
                 <textarea
                     ref={ref}
-                    className={`${baseInputClass} ${borderClass} px-4 py-3 min-h-30 resize-y`}
+                    className={`${baseInputClass} ${borderClass} px-4 py-3 min-h-20 resize-y`}
                     {...props}
                 />
                 {error && (
