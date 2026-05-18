@@ -3,33 +3,13 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, CalendarClock, CheckCircle2, Clock, Mail, MessageCircle, Smartphone, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { buttonHover, buttonTap, scaleIn } from "@/lib/animation/animations";
 import { fetchNotificationDetail, type Notification } from "@/hooks/useNotifications";
 
-type Props = {
-  id: number | null;
-  onClose: () => void;
-};
-
-const channelIcons = {
-  EMAIL: Mail,
-  WHATSAPP: MessageCircle,
-  SMS: Smartphone,
-};
-
+const channelIcons = { EMAIL: Mail, WHATSAPP: MessageCircle, SMS: Smartphone };
 const statusMeta = {
-  SENT: {
-    icon: CheckCircle2,
-    className: "bg-emerald-500/10 text-emerald-500",
-  },
-  FAILED: {
-    icon: AlertCircle,
-    className: "bg-red-500/10 text-red-500",
-  },
-  PENDING: {
-    icon: Clock,
-    className: "bg-amber-500/10 text-amber-500",
-  },
+  SENT: { icon: CheckCircle2, className: "bg-emerald-500/10 text-emerald-600" },
+  FAILED: { icon: AlertCircle, className: "bg-red-500/10 text-red-600" },
+  PENDING: { icon: Clock, className: "bg-amber-500/10 text-amber-600" },
 };
 
 const formatDate = (value?: string | null) => {
@@ -40,152 +20,129 @@ const formatDate = (value?: string | null) => {
 };
 
 const DetailItem = ({ label, value }: { label: string; value?: string | number | null }) => (
-  <div className="rounded-xl border border-admin-border bg-admin-primary/5 p-3">
-    <p className="text-xs font-medium uppercase tracking-wide text-admin-muted-foreground">{label}</p>
-    <p className="mt-1 wrap-break-word text-sm font-semibold text-admin-fg">{value ?? "Not available"}</p>
+  <div className="flex flex-col py-2 border-b border-admin-border/40 last:border-0">
+    <span className="text-[11px] font-semibold uppercase tracking-wider text-admin-muted-foreground">{label}</span>
+    <span className="mt-0.5 text-[13px] font-medium text-admin-fg break-all">{value ?? "—"}</span>
   </div>
 );
 
-export default function NotificationDetailModal({ id, onClose }: Props) {
+export default function NotificationDetailModal({ id, onClose }: { id: number | null, onClose: () => void }) {
   const [data, setData] = useState<Notification | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!id) {
-      setData(null);
-      setError("");
-      return;
-    }
-
+    if (!id) { setData(null); setError(""); return; }
     const fetchDetail = async () => {
       try {
-        setLoading(true);
-        setError("");
+        setLoading(true); setError("");
         setData(await fetchNotificationDetail(id));
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch notification log.");
+        setError(err instanceof Error ? err.message : "Failed to fetch log.");
       } finally {
         setLoading(false);
       }
     };
-
     void fetchDetail();
   }, [id]);
 
   const ChannelIcon = data ? channelIcons[data.channel] : Mail;
-  const statusEntry =
-    data && data.status in statusMeta
-      ? statusMeta[data.status as keyof typeof statusMeta]
-      : { icon: Clock, className: "bg-admin-primary/10 text-admin-primary" };
+  const statusEntry = data && data.status in statusMeta ? statusMeta[data.status as keyof typeof statusMeta] : { icon: Clock, className: "bg-admin-muted/10 text-admin-muted-foreground" };
   const StatusIcon = data ? statusEntry.icon : Clock;
 
   return (
     <AnimatePresence>
-      {id ? (
+      {id && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
-            variants={scaleIn}
-            initial="hidden"
-            animate="visible"
-            exit={{ opacity: 0, scale: 0.96 }}
-            onClick={(event) => event.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-2xl border border-admin-border bg-admin-card shadow-2xl"
+            initial={{ opacity: 0, scale: 0.96, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 10 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl border border-admin-border/60 bg-admin-card shadow-2xl overflow-hidden"
           >
-            <div className="flex items-start justify-between gap-4 border-b border-admin-border p-5">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-admin-border/60 px-5 py-4 shrink-0 bg-admin-bg/30">
               <div>
-                <p className="text-sm font-medium text-admin-muted-foreground">Notification log</p>
-                <h2 className="mt-1 text-xl font-semibold text-admin-fg">Delivery Details</h2>
+                <h2 className="text-[15px] font-bold text-admin-fg">Delivery Details</h2>
+                <p className="text-[11px] text-admin-muted-foreground mt-0.5">Log ID: #{id}</p>
               </div>
-              <motion.button
-                type="button"
-                whileHover={buttonHover}
-                whileTap={buttonTap}
+              <button
                 onClick={onClose}
-                className="rounded-xl border border-admin-border p-2 text-admin-muted-foreground transition-colors hover:text-admin-primary"
-                aria-label="Close notification detail"
+                className="rounded-md p-1.5 text-admin-muted-foreground hover:bg-admin-muted/10 hover:text-admin-fg transition-colors"
               >
                 <X className="h-4 w-4" />
-              </motion.button>
+              </button>
             </div>
 
-            <div className="max-h-[calc(90vh-86px)] overflow-y-auto p-5">
+            {/* Body */}
+            <div className="overflow-y-auto p-5 custom-scrollbar">
               {loading ? (
-                <div className="space-y-4">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <div key={index} className="relative h-16 overflow-hidden rounded-xl bg-admin-primary/[0.07]">
-                      <motion.div
-                        className="absolute inset-0 bg-linear-to-r from-transparent via-admin-card/90 to-transparent dark:via-white/10"
-                        initial={{ x: "-120%" }}
-                        animate={{ x: "120%" }}
-                        transition={{
-                          duration: 1.35,
-                          repeat: Infinity,
-                          ease: "linear",
-                          delay: index * 0.05,
-                        }}
-                      />
-                    </div>
-                  ))}
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="h-6 w-6 border-2 border-admin-primary border-t-transparent rounded-full animate-spin mb-3" />
+                  <p className="text-[13px] text-admin-muted-foreground">Loading payload data...</p>
                 </div>
               ) : error ? (
-                <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-500">
+                <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4 text-[13px] text-red-500 text-center">
                   {error}
                 </div>
               ) : data ? (
-                <div className="space-y-5">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-admin-primary/10 px-3 py-1.5 text-sm font-semibold text-admin-primary">
-                      <ChannelIcon className="h-4 w-4" />
-                      {data.channel}
+                <div className="flex flex-col gap-6">
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-2.5">
+                    <span className="inline-flex items-center gap-1.5 rounded bg-admin-bg border border-admin-border/60 px-2.5 py-1 text-[11px] font-semibold text-admin-fg">
+                      <ChannelIcon className="h-3.5 w-3.5 text-admin-primary" /> {data.channel}
                     </span>
-                    <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${statusEntry.className}`}>
-                      <StatusIcon className="h-4 w-4" />
-                      {data.status}
+                    <span className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${statusEntry.className}`}>
+                      <StatusIcon className="h-3.5 w-3.5" /> {data.status}
                     </span>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-admin-accent-soft px-3 py-1.5 text-sm font-semibold text-admin-primary">
-                      <CalendarClock className="h-4 w-4" />
-                      {formatDate(data.sentAt ?? data.createdAt)}
+                    <span className="inline-flex items-center gap-1.5 rounded bg-admin-bg border border-admin-border/60 px-2.5 py-1 text-[11px] font-semibold text-admin-fg">
+                      <CalendarClock className="h-3.5 w-3.5 text-admin-muted-foreground" /> {formatDate(data.sentAt ?? data.createdAt)}
                     </span>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
                     <DetailItem label="Recipient" value={data.recipient} />
                     <DetailItem label="Template" value={data.template} />
                     <DetailItem label="Provider" value={data.provider} />
-                    <DetailItem label="Attempts" value={data.attempts} />
-                    <DetailItem label="Job ID" value={data.jobId} />
                     <DetailItem label="Job Name" value={data.jobName} />
                     <DetailItem label="Created At" value={formatDate(data.createdAt)} />
-                    <DetailItem label="Sent At" value={formatDate(data.sentAt)} />
+                    <DetailItem label="Delivery Attempts" value={data.attempts} />
                   </div>
 
-                  <DetailItem label="Subject" value={data.subject} />
+                  <DetailItem label="Subject / Title" value={data.subject} />
 
-                  {data.errorMessage ? (
-                    <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-500">
-                      {data.errorMessage}
+                  {data.errorMessage && (
+                    <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4">
+                      <span className="text-[11px] font-bold uppercase text-red-600 mb-1 block">Provider Error</span>
+                      <p className="text-[13px] text-red-600 font-medium">{data.errorMessage}</p>
                     </div>
-                  ) : null}
+                  )}
 
-                  <div>
-                    <p className="mb-2 text-sm font-semibold text-admin-fg">Provider Response</p>
-                    <pre className="max-h-80 overflow-auto rounded-xl border border-admin-border bg-slate-950 p-4 text-xs leading-6 text-slate-100">
-                      {JSON.stringify(data.providerResponse ?? {}, null, 2)}
-                    </pre>
+                  {/* Code Block */}
+                  <div className="flex flex-col mt-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-admin-muted-foreground mb-2">Raw Provider Response</span>
+                    <div className="rounded-lg border border-admin-border/60 bg-admin-bg overflow-hidden">
+                      <pre className="max-h-64 overflow-auto p-4 text-[11px] sm:text-[12px] leading-relaxed text-admin-fg font-mono custom-scrollbar">
+                        {JSON.stringify(data.providerResponse ?? { message: "No payload recorded." }, null, 2)}
+                      </pre>
+                    </div>
                   </div>
                 </div>
               ) : null}
             </div>
           </motion.div>
         </motion.div>
-      ) : null}
+      )}
     </AnimatePresence>
   );
 }

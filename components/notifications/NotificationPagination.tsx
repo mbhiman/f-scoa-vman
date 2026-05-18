@@ -1,8 +1,6 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
-import { buttonHover, buttonTap, slideUp } from "@/lib/animation/animations";
 import type { PaginationMeta } from "@/hooks/useNotifications";
 
 type Props = {
@@ -26,83 +24,53 @@ function visiblePageNumbers(current: number, totalPages: number): number[] {
   return pages;
 }
 
-export default function NotificationPagination({
-  meta,
-  loading,
-  page,
-  onPageChange,
-}: Props) {
+export default function NotificationPagination({ meta, loading, page, onPageChange }: Props) {
   const totalPages = Math.max(1, meta.totalPages || 1);
   const pages = visiblePageNumbers(page, totalPages);
 
   return (
-    <motion.nav
-      variants={slideUp}
-      aria-label="Notification logs pagination"
-      className="admin-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
-    >
-      <p className="text-center text-sm text-admin-muted-foreground sm:text-left">
-        Showing page{" "}
-        <span className="font-semibold tabular-nums text-admin-fg">{meta.page}</span>{" "}
-        of{" "}
-        <span className="font-semibold tabular-nums text-admin-fg">{totalPages}</span>
-        <span className="hidden sm:inline">
-          {" "}
-          ·{" "}
-          <span className="font-medium tabular-nums text-admin-fg">{meta.total}</span>{" "}
-          logs
-        </span>
+    <nav className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:py-5 border-t border-admin-border/40 mt-2">
+      <p className="text-center text-[12px] sm:text-[13px] text-admin-muted-foreground sm:text-left">
+        Showing page <span className="font-semibold text-admin-fg">{meta.page}</span> of <span className="font-semibold text-admin-fg">{totalPages}</span>
+        <span className="hidden sm:inline"> · <span className="font-semibold text-admin-fg">{meta.total}</span> total logs</span>
       </p>
 
-      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
-        <motion.button
-          type="button"
-          whileHover={buttonHover}
-          whileTap={buttonTap}
+      <div className="flex items-center justify-center gap-1.5 sm:justify-end">
+        <button
           disabled={!meta.hasPrev || loading}
           onClick={() => onPageChange(Math.max(1, page - 1))}
-          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-admin-border px-3 text-admin-fg transition-colors hover:border-admin-primary/40 hover:bg-admin-primary/5 hover:text-admin-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-primary/30 disabled:cursor-not-allowed disabled:opacity-40"
-          aria-label="Previous page"
+          className="flex h-8 w-8 items-center justify-center rounded-md border border-admin-border bg-admin-card text-admin-fg hover:bg-admin-muted/5 transition-colors disabled:opacity-40 disabled:pointer-events-none"
         >
-          <ChevronLeft className="h-5 w-5" />
-        </motion.button>
+          <ChevronLeft className="h-4 w-4" />
+        </button>
 
         <div className="hidden items-center gap-1 sm:flex">
           {pages.map((p) => {
             const active = p === page;
             return (
-              <motion.button
+              <button
                 key={p}
-                type="button"
-                whileHover={active ? undefined : buttonHover}
-                whileTap={buttonTap}
                 disabled={loading}
                 onClick={() => onPageChange(p)}
-                aria-current={active ? "page" : undefined}
-                className={`min-h-10 min-w-10 rounded-xl text-sm font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-primary/30 ${
-                  active
-                    ? "bg-admin-primary text-white shadow-md shadow-admin-primary/25"
-                    : "border border-transparent text-admin-muted-foreground hover:border-admin-border hover:bg-admin-primary/5 hover:text-admin-fg"
-                }`}
+                className={`flex h-8 min-w-8 items-center justify-center rounded-md text-[13px] font-medium transition-colors ${active
+                    ? "bg-admin-primary/10 text-admin-primary"
+                    : "text-admin-muted-foreground hover:bg-admin-muted/5 hover:text-admin-fg"
+                  }`}
               >
                 {p}
-              </motion.button>
+              </button>
             );
           })}
         </div>
 
-        <motion.button
-          type="button"
-          whileHover={buttonHover}
-          whileTap={buttonTap}
+        <button
           disabled={!meta.hasNext || loading}
           onClick={() => onPageChange(page + 1)}
-          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-admin-border px-3 text-admin-fg transition-colors hover:border-admin-primary/40 hover:bg-admin-primary/5 hover:text-admin-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-primary/30 disabled:cursor-not-allowed disabled:opacity-40"
-          aria-label="Next page"
+          className="flex h-8 w-8 items-center justify-center rounded-md border border-admin-border bg-admin-card text-admin-fg hover:bg-admin-muted/5 transition-colors disabled:opacity-40 disabled:pointer-events-none"
         >
-          <ChevronRight className="h-5 w-5" />
-        </motion.button>
+          <ChevronRight className="h-4 w-4" />
+        </button>
       </div>
-    </motion.nav>
+    </nav>
   );
 }
