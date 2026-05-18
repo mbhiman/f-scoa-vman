@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { adminAuthFetch, parseApiError } from "@/lib/admin-api";
-import { useUIStore } from "@/store/ui-store"; // Added UI Store
+import { useUIStore } from "@/store/ui-store";
 
 type AdminProfile = {
     id: string;
@@ -68,16 +68,28 @@ const routeLabels: Record<string, string> = {
 export function AdminTopNav() {
     const { resolvedTheme, setTheme } = useTheme();
     const pathname = usePathname();
-    const { sidebarCollapsed, toggleSidebar } = useUIStore(); // Hooked up the store
+    const { sidebarCollapsed, toggleSidebar } = useUIStore();
 
     const [mounted, setMounted] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
-    const [userOpen, setUserOpen] = useState(false); // Now strictly controlled by click
+    const [userOpen, setUserOpen] = useState(false);
     const [profile, setProfile] = useState<AdminProfile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
 
+    // Timer reference for the "Forgiving Hover" delay
+    const hoverTimeoutRef = useRef<number | null>(null);
+
     useEffect(() => {
         setMounted(true);
+    }, []);
+
+    // Cleanup timers if the component unmounts
+    useEffect(() => {
+        return () => {
+            if (hoverTimeoutRef.current !== null) {
+                window.clearTimeout(hoverTimeoutRef.current);
+            }
+        };
     }, []);
 
     useEffect(() => {
@@ -130,6 +142,25 @@ export function AdminTopNav() {
     const displayName = profile?.name || "System Admin";
     const displayEmail = profile?.email || "—";
     const avatarText = initialsFromName(profile?.name);
+
+    // --- Hover Logic Functions ---
+    const handleMouseEnter = () => {
+        // If the user enters the wrapper, cancel any pending close timer and open the menu
+        if (hoverTimeoutRef.current !== null) {
+            window.clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        }
+        setUserOpen(true);
+    };
+
+    const handleMouseLeave = () => {
+        // When the user leaves the wrapper, wait 250ms before closing.
+        // This gives them time to move the mouse across the gap into the dropdown menu.
+        hoverTimeoutRef.current = window.setTimeout(() => {
+            setUserOpen(false);
+            hoverTimeoutRef.current = null;
+        }, 250);
+    };
 
     const handleSignOut = () => {
         setUserOpen(false);
@@ -194,8 +225,13 @@ export function AdminTopNav() {
                 {/* Vertical Divider */}
                 <div className="w-px h-6 bg-admin-border/60 mx-1 hidden md:block"></div>
 
-                {/* Professional User Dropdown */}
-                <div className="relative">
+                {/* Professional User Dropdown with Forgiving Hover */}
+                <div
+                    className="relative"
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                >
+                    {/* The Button acts as both a hover target (desktop) and click target (mobile) */}
                     <button
                         onClick={() => setUserOpen(!userOpen)}
                         className={`flex items-center gap-2.5 p-1 md:pl-2 md:pr-3 md:py-1.5 rounded-lg border transition-all focus:outline-none ${userOpen ? 'bg-admin-primary/5 border-admin-primary/20' : 'border-transparent hover:bg-admin-muted/5 hover:border-admin-border'}`}
@@ -216,10 +252,10 @@ export function AdminTopNav() {
                     {/* Popover Implementation */}
                     {userOpen && (
                         <>
-                            {/* Invisible overlay captures clicks anywhere else on the screen to close the menu */}
-                            <div className="fixed inset-0 z-40" onClick={() => setUserOpen(false)} />
+                            {/* Invisible overlay captures clicks anywhere else on the screen to close the menu. Hidden on MD so it doesn't block desktop hover interactions. */}
+                            <div className="fixed inset-0 z-40 md:hidden" onClick={() => setUserOpen(false)} />
 
-                            <div className="absolute right-0 mt-2 w-56 rounded-xl border shadow-xl z-50 py-1.5 bg-admin-card border-admin-border animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="absolute right-0 top-full mt-1.5 w-56 rounded-xl border shadow-xl z-50 py-1.5 bg-admin-card border-admin-border animate-in fade-in slide-in-from-top-2 duration-200">
 
                                 <div className="px-4 py-3 border-b border-admin-border/50">
                                     <p className="text-sm font-bold text-admin-fg truncate">
@@ -254,7 +290,7 @@ export function AdminTopNav() {
                                     <button
                                         type="button"
                                         onClick={handleSignOut}
-                                        className="flex w-full items-center gap-3 px-4 py-2 text-[13px] font-bold text-red-500 hover:bg-red-500/10 transition-colors"
+                                        className="flex w-full items-center gap-3 px-4 py-2 text-[13px] font-bold text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
                                     >
                                         <LogOut className="w-4 h-4" />
                                         Sign Out Safely
