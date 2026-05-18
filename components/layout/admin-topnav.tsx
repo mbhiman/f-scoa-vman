@@ -10,12 +10,14 @@ import {
     User,
     Settings,
     Menu,
+    PanelLeftClose
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { adminAuthFetch, parseApiError } from "@/lib/admin-api";
+import { useUIStore } from "@/store/ui-store"; // Added UI Store
 
 type AdminProfile = {
     id: string;
@@ -66,13 +68,13 @@ const routeLabels: Record<string, string> = {
 export function AdminTopNav() {
     const { resolvedTheme, setTheme } = useTheme();
     const pathname = usePathname();
+    const { sidebarCollapsed, toggleSidebar } = useUIStore(); // Hooked up the store
 
     const [mounted, setMounted] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
-    const [userOpen, setUserOpen] = useState(false);
+    const [userOpen, setUserOpen] = useState(false); // Now strictly controlled by click
     const [profile, setProfile] = useState<AdminProfile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
-    const userMenuCloseTimerRef = useRef<number | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -109,7 +111,7 @@ export function AdminTopNav() {
                 try {
                     window.location.assign("/signin/admin");
                 } catch {
-                    // ignore redirect failures
+                    // ignore
                 }
             } finally {
                 setProfileLoading(false);
@@ -123,160 +125,143 @@ export function AdminTopNav() {
     const currentLabel =
         Object.entries(routeLabels).find(([key]) =>
             pathname.startsWith(key)
-        )?.[1] ?? "Admin";
+        )?.[1] ?? "Admin Panel";
 
-    const displayName = profile?.name || "Admin";
+    const displayName = profile?.name || "System Admin";
     const displayEmail = profile?.email || "—";
     const avatarText = initialsFromName(profile?.name);
 
-    const cancelUserMenuClose = () => {
-        if (userMenuCloseTimerRef.current === null) return;
-        window.clearTimeout(userMenuCloseTimerRef.current);
-        userMenuCloseTimerRef.current = null;
-    };
-
-    const scheduleUserMenuClose = (delayMs: number) => {
-        cancelUserMenuClose();
-        userMenuCloseTimerRef.current = window.setTimeout(() => {
-            setUserOpen(false);
-            userMenuCloseTimerRef.current = null;
-        }, delayMs);
-    };
-
-    useEffect(() => {
-        return () => cancelUserMenuClose();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
     const handleSignOut = () => {
-        cancelUserMenuClose();
         setUserOpen(false);
         setNotifOpen(false);
         clearAdminSession();
         try {
             window.location.assign("/signin/admin");
         } catch {
-            // ignore redirect failures
+            // ignore
         }
     };
 
     return (
-        <header className="flex items-center justify-between h-16 px-4 md:px-6 border-b shrink-0 bg-admin-bg border-admin-border">
-            {/* Left */}
-            <div className="flex items-center gap-2 md:gap-4">
-                <button className="p-2 -ml-2 md:hidden text-admin-muted-foreground hover:text-admin-primary">
-                    <Menu className="w-5 h-5" />
+        <header className="flex items-center justify-between h-16 px-4 md:px-6 border-b shrink-0 bg-admin-bg border-admin-border/50 sticky top-0 z-30">
+            {/* Left Section */}
+            <div className="flex items-center gap-3 md:gap-4">
+                {/* Mobile Hamburger / Desktop Collapse Sync */}
+                <button
+                    onClick={toggleSidebar}
+                    className="p-2 -ml-2 md:hidden text-admin-muted-foreground hover:text-admin-fg hover:bg-admin-muted/10 rounded-md transition-colors"
+                >
+                    {sidebarCollapsed ? <Menu className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
                 </button>
 
                 <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="hidden sm:inline text-sm text-admin-muted-foreground">
-                        Admin
-                    </span>
-                    <span className="hidden sm:inline text-admin-muted-foreground">/</span>
-                    <span className="text-sm font-semibold text-admin-foreground truncate">
+                    <span className="text-[15px] font-bold text-admin-fg truncate tracking-tight">
                         {currentLabel}
                     </span>
                 </div>
             </div>
 
-            {/* Right */}
-            <div className="flex items-center gap-1 md:gap-2">
+            {/* Right Section */}
+            <div className="flex items-center gap-1.5 md:gap-2.5">
                 {/* Search */}
-                <button className="flex items-center gap-2 p-2 md:px-3 md:py-1.5 rounded-md text-sm border border-transparent md:border-admin-border text-admin-muted-foreground hover:bg-admin-primary/10 transition-colors">
-                    <Search className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                    <span className="hidden md:inline">Search...</span>
+                <button className="flex items-center gap-2 p-2 md:px-3 md:py-1.5 rounded-lg text-sm border border-transparent hover:border-admin-border hover:bg-admin-muted/5 text-admin-muted-foreground hover:text-admin-fg transition-all">
+                    <Search className="w-4.5 h-4.5 md:w-4 md:h-4" />
+                    <span className="hidden md:inline font-medium">Quick Search...</span>
                 </button>
 
                 {/* Theme Toggle */}
                 <button
-                    onClick={() =>
-                        setTheme(resolvedTheme === "dark" ? "light" : "dark")
-                    }
-                    className="w-9 h-9 flex items-center justify-center rounded-md border border-transparent md:border-admin-border text-admin-muted-foreground hover:bg-admin-primary/10 transition-colors"
+                    onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                    className="w-9 h-9 flex items-center justify-center rounded-lg border border-transparent hover:border-admin-border text-admin-muted-foreground hover:bg-admin-muted/5 hover:text-admin-fg transition-all"
                 >
                     {!mounted ? (
-                        <div className="w-4 h-4" />
+                        <div className="w-4.5 h-4.5" />
                     ) : resolvedTheme === "dark" ? (
-                        <Sun className="w-4 h-4" />
+                        <Sun className="w-4.5 h-4.5" />
                     ) : (
-                        <Moon className="w-4 h-4" />
+                        <Moon className="w-4.5 h-4.5" />
                     )}
                 </button>
 
                 {/* Notifications */}
                 <button
                     onClick={() => setNotifOpen(!notifOpen)}
-                    className="w-9 h-9 flex items-center justify-center rounded-md border border-transparent md:border-admin-border text-admin-muted-foreground hover:bg-admin-primary/10 transition-colors"
+                    className="w-9 h-9 flex items-center justify-center rounded-lg border border-transparent hover:border-admin-border text-admin-muted-foreground hover:bg-admin-muted/5 hover:text-admin-fg transition-all"
                 >
-                    <Bell className="w-4 h-4" />
+                    <Bell className="w-4.5 h-4.5" />
                 </button>
 
-                {/* User */}
-                <div
-                    className="relative ml-1"
-                    onMouseEnter={() => {
-                        cancelUserMenuClose();
-                        setUserOpen(true);
-                    }}
-                    onMouseLeave={() => scheduleUserMenuClose(1000)}
-                >
+                {/* Vertical Divider */}
+                <div className="w-px h-6 bg-admin-border/60 mx-1 hidden md:block"></div>
+
+                {/* Professional User Dropdown */}
+                <div className="relative">
                     <button
                         onClick={() => setUserOpen(!userOpen)}
-                        className="flex items-center gap-2 p-1 md:pl-2 md:pr-3 md:py-1.5 rounded-md border border-transparent md:border-admin-border hover:bg-admin-primary/10 transition-colors"
+                        className={`flex items-center gap-2.5 p-1 md:pl-2 md:pr-3 md:py-1.5 rounded-lg border transition-all focus:outline-none ${userOpen ? 'bg-admin-primary/5 border-admin-primary/20' : 'border-transparent hover:bg-admin-muted/5 hover:border-admin-border'}`}
                     >
-                        <div className="w-7 h-7 md:w-6 md:h-6 rounded-full flex items-center justify-center text-[10px] md:text-xs font-bold text-white bg-admin-primary">
+                        <div className="w-8 h-8 md:w-7 md:h-7 rounded-full flex items-center justify-center text-[11px] md:text-xs font-bold text-white bg-admin-primary shadow-sm ring-2 ring-admin-bg">
                             {avatarText}
                         </div>
 
-                        <span className="hidden lg:inline text-sm font-medium text-admin-foreground">
-                            {profileLoading ? "Loading…" : displayName}
-                        </span>
+                        <div className="hidden lg:flex flex-col items-start justify-center">
+                            <span className="text-[13px] font-bold text-admin-fg leading-none">
+                                {profileLoading ? "Loading…" : displayName}
+                            </span>
+                        </div>
 
-                        <ChevronDown className="hidden sm:inline w-3.5 h-3.5 text-admin-muted-foreground" />
+                        <ChevronDown className={`hidden sm:inline w-3.5 h-3.5 text-admin-muted-foreground transition-transform duration-200 ${userOpen ? "rotate-180" : ""}`} />
                     </button>
 
+                    {/* Popover Implementation */}
                     {userOpen && (
-                        <div className="absolute right-0 top-12 w-56 rounded-xl border shadow-xl z-50 py-1 bg-admin-bg border-admin-border">
-                            <div className="px-4 py-3 border-b border-admin-border">
-                                <p className="text-sm font-medium text-admin-foreground">
-                                    {profileLoading ? "Loading…" : displayName}
-                                </p>
-                                <p className="text-xs text-admin-muted-foreground">
-                                    {displayEmail}
-                                </p>
-                            </div>
+                        <>
+                            {/* Invisible overlay captures clicks anywhere else on the screen to close the menu */}
+                            <div className="fixed inset-0 z-40" onClick={() => setUserOpen(false)} />
 
-                            <div className="py-1">
-                                <Link
-                                    href="/admin/settings"
-                                    onClick={() => setUserOpen(false)}
-                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-admin-foreground hover:bg-admin-primary/10"
-                                >
-                                    <User className="w-4 h-4 text-admin-muted-foreground" />
-                                    Profile
-                                </Link>
+                            <div className="absolute right-0 mt-2 w-56 rounded-xl border shadow-xl z-50 py-1.5 bg-admin-card border-admin-border animate-in fade-in slide-in-from-top-2 duration-200">
 
-                                <Link
-                                    href="/admin/settings"
-                                    onClick={() => setUserOpen(false)}
-                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-admin-foreground hover:bg-admin-primary/10"
-                                >
-                                    <Settings className="w-4 h-4 text-admin-muted-foreground" />
-                                    Settings
-                                </Link>
-                            </div>
+                                <div className="px-4 py-3 border-b border-admin-border/50">
+                                    <p className="text-sm font-bold text-admin-fg truncate">
+                                        {profileLoading ? "Loading…" : displayName}
+                                    </p>
+                                    <p className="text-[11px] font-medium text-admin-muted-foreground truncate mt-0.5">
+                                        {displayEmail}
+                                    </p>
+                                </div>
 
-                            <div className="border-t mt-1 pt-1 border-admin-border">
-                                <button
-                                    type="button"
-                                    onClick={handleSignOut}
-                                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                    Sign Out
-                                </button>
+                                <div className="py-1.5">
+                                    <Link
+                                        href="/admin/settings"
+                                        onClick={() => setUserOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-2 text-[13px] font-medium text-admin-fg hover:bg-admin-muted/10 transition-colors"
+                                    >
+                                        <User className="w-4 h-4 text-admin-muted-foreground" />
+                                        My Profile
+                                    </Link>
+
+                                    <Link
+                                        href="/admin/settings"
+                                        onClick={() => setUserOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-2 text-[13px] font-medium text-admin-fg hover:bg-admin-muted/10 transition-colors"
+                                    >
+                                        <Settings className="w-4 h-4 text-admin-muted-foreground" />
+                                        Account Settings
+                                    </Link>
+                                </div>
+
+                                <div className="border-t border-admin-border/50 mt-1 pt-1.5 pb-0.5">
+                                    <button
+                                        type="button"
+                                        onClick={handleSignOut}
+                                        className="flex w-full items-center gap-3 px-4 py-2 text-[13px] font-bold text-red-500 hover:bg-red-500/10 transition-colors"
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        Sign Out Safely
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        </>
                     )}
                 </div>
             </div>
