@@ -28,11 +28,15 @@ export default function NotificationPagination({ meta, loading, page, onPageChan
   const totalPages = Math.max(1, meta.totalPages || 1);
   const pages = visiblePageNumbers(page, totalPages);
 
+  // Modern SaaS data-range calculation
+  const limit = meta.limit || 50;
+  const startRange = meta.total === 0 ? 0 : ((page - 1) * limit) + 1;
+  const endRange = Math.min(page * limit, meta.total);
+
   return (
     <nav className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:py-5 border-t border-admin-border/40 mt-2">
       <p className="text-center text-[12px] sm:text-[13px] text-admin-muted-foreground sm:text-left">
-        Showing page <span className="font-semibold text-admin-fg">{meta.page}</span> of <span className="font-semibold text-admin-fg">{totalPages}</span>
-        <span className="hidden sm:inline"> · <span className="font-semibold text-admin-fg">{meta.total}</span> total logs</span>
+        Showing <span className="font-medium text-admin-fg">{startRange}–{endRange}</span> of <span className="font-medium text-admin-fg">{meta.total}</span> results
       </p>
 
       <div className="flex items-center justify-center gap-1.5 sm:justify-end">
@@ -53,8 +57,8 @@ export default function NotificationPagination({ meta, loading, page, onPageChan
                 disabled={loading}
                 onClick={() => onPageChange(p)}
                 className={`flex h-8 min-w-8 items-center justify-center rounded-md text-[13px] font-medium transition-colors ${active
-                    ? "bg-admin-primary/10 text-admin-primary"
-                    : "text-admin-muted-foreground hover:bg-admin-muted/5 hover:text-admin-fg"
+                  ? "bg-admin-primary/10 text-admin-primary"
+                  : "text-admin-muted-foreground hover:bg-admin-muted/5 hover:text-admin-fg"
                   }`}
               >
                 {p}
