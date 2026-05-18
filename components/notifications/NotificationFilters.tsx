@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
-import { motion } from "framer-motion";
-import { buttonHover, buttonTap, slideUp } from "@/lib/animation/animations";
 import type { NotificationFilters as NotificationFilterState } from "@/hooks/useNotifications";
 
 type Props = {
@@ -13,54 +11,36 @@ type Props = {
   onReset: () => void;
 };
 
-const inputClass =
-  "h-11 w-full rounded-xl border border-admin-border bg-admin-card px-3 text-sm text-admin-fg shadow-sm outline-none transition-all placeholder:text-admin-muted-foreground focus:border-admin-primary focus:ring-4 focus:ring-admin-primary/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]";
+// Flat, minimal input class
+const inputClass = "h-[38px] w-full rounded-lg border border-admin-border bg-admin-bg/50 px-3 text-[13px] text-admin-fg outline-none transition-all placeholder:text-admin-muted-foreground focus:border-admin-primary/50 focus:bg-admin-card focus:ring-2 focus:ring-admin-primary/10";
 
 type SelectOption<T extends string> = { value: T | ""; label: string };
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-admin-muted-foreground">
+    <span className="mb-1.5 block text-[11px] font-semibold text-admin-fg">
       {children}
     </span>
   );
 }
 
-function ModernSelect<T extends string>({
-  value,
-  onChange,
-  options,
-  placeholder,
-  ariaLabel,
-}: {
-  value: T | "";
-  onChange: (value: T | "") => void;
-  options: Array<SelectOption<T>>;
-  placeholder: string;
-  ariaLabel: string;
-}) {
+// Keeping the beautiful dropdown animation as requested
+function ModernSelect<T extends string>({ value, onChange, options, placeholder, ariaLabel }: any) {
   const buttonId = useId();
   const listboxId = useMemo(() => `listbox-${buttonId}`, [buttonId]);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
-  const selectedLabel =
-    options.find((option) => option.value === value)?.label ??
-    (value ? String(value) : placeholder);
+  const selectedLabel = options.find((o: any) => o.value === value)?.label ?? (value ? String(value) : placeholder);
 
   useEffect(() => {
     if (!open) return;
-
     const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node | null;
-      if (!target) return;
-      if (!rootRef.current?.contains(target)) setOpen(false);
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     };
-
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
-
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
@@ -77,69 +57,48 @@ function ModernSelect<T extends string>({
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-controls={listboxId}
         onClick={() => setOpen((current) => !current)}
-        className={`${inputClass} group inline-flex items-center justify-between gap-3 px-3 text-left hover:border-admin-primary/50`}
+        className={`${inputClass} group inline-flex items-center justify-between gap-3 px-3 text-left hover:border-admin-primary/40`}
       >
         <span className={`min-w-0 flex-1 truncate ${value ? "text-admin-fg" : "text-admin-muted-foreground"}`}>
           {selectedLabel}
         </span>
-        <span className="flex shrink-0 items-center gap-2">
-          {value ? (
-            <span
-              className="h-2 w-2 shrink-0 rounded-full bg-admin-primary shadow-[0_0_0_3px_rgba(22,66,185,0.15)] dark:shadow-[0_0_0_3px_rgba(64,128,248,0.2)]"
-              aria-hidden
-            />
-          ) : null}
-          <ChevronDown
-            className={`h-4 w-4 shrink-0 text-admin-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-            aria-hidden
-          />
-        </span>
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-admin-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
       <AnimatePresence>
-        {open ? (
+        {open && (
           <motion.div
             key={listboxId}
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            initial={{ opacity: 0, y: 4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.98 }}
-            transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
-            role="listbox"
-            id={listboxId}
-            aria-labelledby={buttonId}
-            className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 overflow-hidden rounded-2xl border border-admin-border bg-admin-card/95 shadow-[0_24px_48px_-12px_rgba(15,23,42,0.22)] backdrop-blur-xl dark:bg-admin-card/98 dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.55)]"
+            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 overflow-hidden rounded-lg border border-admin-border bg-admin-card shadow-lg"
           >
-            <div className="max-h-64 overflow-auto p-1.5">
-              <div className="flex flex-col gap-1">
-                {options.map((option) => {
+            <div className="max-h-64 overflow-auto p-1">
+              <div className="flex flex-col">
+                {options.map((option: any) => {
                   const isSelected = option.value === value;
                   return (
                     <button
                       key={option.value || "__all"}
                       type="button"
-                      role="option"
-                      aria-selected={isSelected}
-                      onClick={() => {
-                        onChange(option.value);
-                        setOpen(false);
-                      }}
-                      className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-primary/35 ${
-                        isSelected
-                          ? "border-admin-primary/35 bg-admin-primary/12 text-admin-primary"
-                          : "border-transparent text-admin-fg hover:border-admin-border hover:bg-admin-primary/8"
-                      }`}
+                      onClick={() => { onChange(option.value); setOpen(false); }}
+                      className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-[13px] transition-colors ${isSelected
+                        ? "bg-admin-primary/10 text-admin-primary font-medium"
+                        : "text-admin-fg hover:bg-admin-muted/5"
+                        }`}
                     >
                       <span className="truncate">{option.label}</span>
-                      {isSelected ? <Check className="h-4 w-4 shrink-0" aria-hidden /> : null}
+                      {isSelected && <Check className="h-3.5 w-3.5 shrink-0" />}
                     </button>
                   );
                 })}
               </div>
             </div>
           </motion.div>
-        ) : null}
+        )}
       </AnimatePresence>
     </div>
   );
@@ -147,60 +106,37 @@ function ModernSelect<T extends string>({
 
 export default function NotificationFilters({ filters, onChange, onReset }: Props) {
   const updateFilter = (key: keyof NotificationFilterState, value: string | number) => {
-    onChange({
-      ...filters,
-      [key]: value,
-      page: 1,
-    });
+    onChange({ ...filters, [key]: value, page: 1 });
   };
 
   return (
-    <motion.section
-      variants={slideUp}
-      className="admin-card relative z-30 overflow-visible border-admin-border/80 p-4 shadow-[0_8px_32px_-16px_rgba(15,23,42,0.14)] sm:p-5 lg:sticky lg:top-4 lg:z-30 dark:shadow-[0_8px_32px_-16px_rgba(0,0,0,0.45)]"
-    >
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-admin-border/60 pb-4">
-        <div className="flex items-center gap-2 text-admin-fg">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-admin-primary/10 text-admin-primary">
-            <SlidersHorizontal className="h-4 w-4" aria-hidden />
-          </span>
-          <div>
-            <h2 className="text-sm font-semibold leading-tight">Filters</h2>
-            <p className="text-xs text-admin-muted-foreground">
-              Narrow logs by channel, status, template, or date range
-            </p>
-          </div>
-        </div>
-      </div>
-
+    <section className="bg-admin-card rounded-xl border border-admin-border/60 p-4 sm:p-5 shadow-sm">
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-12 xl:gap-x-4">
-          <div className="sm:col-span-2 xl:col-span-4">
-            <FieldLabel>Search</FieldLabel>
-            <label className="relative block">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-admin-muted-foreground"
-                aria-hidden
-              />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+          {/* Search */}
+          <div className="lg:col-span-1">
+            <FieldLabel>Search Recipient</FieldLabel>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-admin-muted-foreground" />
               <input
-                type="search"
+                type="text"
                 value={filters.search ?? ""}
-                placeholder="Email or phone…"
-                className={`${inputClass} pl-10`}
+                placeholder="Email or phone..."
+                className={`${inputClass} pl-8`}
                 onChange={(e) => updateFilter("search", e.target.value)}
-                autoComplete="off"
-                enterKeyHint="search"
               />
-            </label>
+            </div>
           </div>
 
-          <div className="xl:col-span-2">
+          {/* Channel */}
+          <div>
             <FieldLabel>Channel</FieldLabel>
             <ModernSelect
               ariaLabel="Channel filter"
               placeholder="All channels"
               value={(filters.channel ?? "") as "" | "EMAIL" | "WHATSAPP" | "SMS"}
-              onChange={(v) => updateFilter("channel", v)}
+              onChange={(v: any) => updateFilter("channel", v)}
               options={[
                 { value: "", label: "All channels" },
                 { value: "EMAIL", label: "Email" },
@@ -210,19 +146,14 @@ export default function NotificationFilters({ filters, onChange, onReset }: Prop
             />
           </div>
 
-          <div className="xl:col-span-2">
+          {/* Status */}
+          <div>
             <FieldLabel>Status</FieldLabel>
             <ModernSelect
               ariaLabel="Status filter"
               placeholder="All statuses"
-              value={
-                (filters.status ?? "") as
-                  | ""
-                  | "SENT"
-                  | "FAILED"
-                  | "PENDING"
-              }
-              onChange={(v) => updateFilter("status", v)}
+              value={(filters.status ?? "") as "" | "SENT" | "FAILED" | "PENDING"}
+              onChange={(v: any) => updateFilter("status", v)}
               options={[
                 { value: "", label: "All statuses" },
                 { value: "SENT", label: "Sent" },
@@ -232,13 +163,14 @@ export default function NotificationFilters({ filters, onChange, onReset }: Prop
             />
           </div>
 
-          <div className="xl:col-span-4">
+          {/* Template */}
+          <div>
             <FieldLabel>Template</FieldLabel>
             <ModernSelect
               ariaLabel="Template filter"
               placeholder="All templates"
               value={(filters.template ?? "") as "" | "otp" | "welcome" | "resetPassword"}
-              onChange={(v) => updateFilter("template", v)}
+              onChange={(v: any) => updateFilter("template", v)}
               options={[
                 { value: "", label: "All templates" },
                 { value: "otp", label: "OTP" },
@@ -249,41 +181,36 @@ export default function NotificationFilters({ filters, onChange, onReset }: Prop
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-12 xl:items-end xl:gap-x-4">
-          <div className="xl:col-span-2">
-            <FieldLabel>From</FieldLabel>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4 items-end border-t border-admin-border/40 pt-4 mt-2">
+          <div>
+            <FieldLabel>Date From</FieldLabel>
             <input
               type="date"
               value={filters.from ?? ""}
               className={inputClass}
               onChange={(e) => updateFilter("from", e.target.value)}
-              aria-label="From date"
             />
           </div>
-          <div className="xl:col-span-2">
-            <FieldLabel>To</FieldLabel>
+          <div>
+            <FieldLabel>Date To</FieldLabel>
             <input
               type="date"
               value={filters.to ?? ""}
               className={inputClass}
               onChange={(e) => updateFilter("to", e.target.value)}
-              aria-label="To date"
             />
           </div>
-          <div className="sm:col-span-2 xl:col-span-8 xl:flex xl:justify-end">
-            <motion.button
+          <div className="sm:col-span-1 lg:col-span-2 flex justify-end">
+            <button
               type="button"
-              whileHover={buttonHover}
-              whileTap={buttonTap}
               onClick={onReset}
-              className="inline-flex h-11 min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-admin-border bg-admin-card px-5 text-sm font-semibold text-admin-muted-foreground shadow-sm transition-colors hover:border-admin-primary/35 hover:bg-admin-primary/5 hover:text-admin-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-admin-primary/30 xl:w-auto xl:min-w-40"
+              className="inline-flex h-9.5 items-center justify-center gap-2 rounded-lg border border-admin-border bg-admin-bg/50 px-4 text-[13px] font-medium text-admin-fg hover:bg-admin-muted/10 transition-colors w-full sm:w-auto"
             >
-              <RotateCcw className="h-4 w-4" aria-hidden />
-              Reset filters
-            </motion.button>
+              <RotateCcw className="h-3.5 w-3.5" /> Clear Filters
+            </button>
           </div>
         </div>
       </div>
-    </motion.section>
+    </section>
   );
 }
