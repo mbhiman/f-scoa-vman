@@ -48,25 +48,31 @@ export default function AdminCourseBuilder() {
         }
     };
 
+    // 🚨 FIX 1: Smart Routing & Memory Management
     useEffect(() => {
+        // SCENARIO A: Admin clicked "Create Course" from the table
         if (!routeCourseId || routeCourseId === "create") {
-            setEditMode(false);
-            if (!courseId) {
-                setStep(1);
+            // If Zustand remembers an old drafted course, WIPE IT OUT to start fresh.
+            if (courseId) {
+                reset();
             }
+            setEditMode(false);
+            setStep(1);
             return;
         }
 
+        // SCENARIO B: We are actively building/saving and the URL matched our memory
         if (courseId === routeCourseId) {
             if (!editMode) setEditMode(true);
             return;
         }
 
+        // SCENARIO C: Admin clicked "Edit" on an existing course from the table
         setEditMode(true);
         void loadFullCourseData(routeCourseId);
         setStep(1);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [routeCourseId, courseId]);
+    }, [routeCourseId]); // Purposely excluding 'courseId' to prevent reset loops
 
     const handleReset = () => {
         reset();
@@ -179,7 +185,10 @@ export default function AdminCourseBuilder() {
 
             if (!res.ok) throw new Error(await parseApiError(res));
 
-            await loadFullCourseData(id);
+            // 🚨 FIX 2: Removed `await loadFullCourseData(id);`
+            // We rely purely on the local Zustand memory (which is perfectly accurate) 
+            // so a slow or buggy backend doesn't overwrite our Step 6 Pre-flight Review!
+
             setStep(6);
             setSuccess("Certificate uploaded. Please review your course.");
         } catch (e: any) {
@@ -198,7 +207,12 @@ export default function AdminCourseBuilder() {
             });
 
             if (!res.ok) throw new Error(await parseApiError(res));
-            setSuccess("Course published successfully!");
+
+            setSuccess("Course published successfully! Redirecting...");
+            setTimeout(() => {
+                router.push("/admin/courses");
+            }, 1500);
+
         } catch (e: any) {
             setError(e?.message ?? "Failed to publish course");
         }
