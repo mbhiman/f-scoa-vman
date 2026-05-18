@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronRight, Clock, Target, RotateCcw, TimerReset } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { TextInput, btnPrimaryClass, btnSecondaryClass } from "../ui/FormInputs";
 
 const examSettingsSchema = z.object({
@@ -41,98 +41,80 @@ export function ExamSettingsForm({ initialData, onSubmit, onBack }: ExamSettings
     };
 
     return (
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-6 admin-card p-5 md:p-6 lg:p-8">
-            <div className="border-b border-admin-border pb-4">
-                <h2 className="text-lg font-bold text-admin-fg">Exam Parameters</h2>
-                <p className="text-sm text-admin-muted-foreground mt-0.5">Establish the rules, grading threshold, and limits for the evaluation.</p>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col bg-admin-card rounded-xl border border-admin-border/50 p-4 sm:p-8">
+            <div className="border-b border-admin-border/40 pb-4 mb-6">
+                <h2 className="text-[15px] sm:text-lg font-bold text-admin-fg">Exam Parameters</h2>
+                <p className="text-[11px] sm:text-[13px] text-admin-muted-foreground mt-1">Configure grading strictness, limits, and retry cooldowns.</p>
             </div>
 
-            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 pt-2">
+            <div className="grid gap-x-6 gap-y-8 grid-cols-1 md:grid-cols-2 max-w-4xl">
 
-                {/* Duration Card */}
-                <div className="flex flex-col p-5 rounded-xl border border-admin-border bg-admin-bg/50 focus-within:ring-1 focus-within:ring-admin-primary/50 focus-within:border-admin-primary transition-all shadow-sm">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-blue-500/10 rounded-lg text-blue-600">
-                            <Clock className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-admin-fg">Time Limit</h3>
-                            <p className="text-[11px] text-admin-muted-foreground">In minutes</p>
-                        </div>
-                    </div>
+                <div className="flex flex-col">
                     <TextInput
                         type="number"
+                        label="Time Limit (minutes)"
                         placeholder="e.g. 60"
                         error={form.formState.errors.duration_minutes?.message}
                         {...form.register("duration_minutes", { valueAsNumber: true })}
                     />
+                    <p className="text-[10px] sm:text-[11px] text-admin-muted-foreground mt-1.5 leading-relaxed">
+                        Total minutes to complete the exam. Cannot be paused once started.
+                    </p>
                 </div>
 
-                {/* Passing Grade Card */}
-                <div className="flex flex-col p-5 rounded-xl border border-admin-border bg-admin-bg/50 focus-within:ring-1 focus-within:ring-admin-primary/50 focus-within:border-admin-primary transition-all shadow-sm">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-600">
-                            <Target className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-admin-fg">Passing Score</h3>
-                            <p className="text-[11px] text-admin-muted-foreground">Percentage (0-100)</p>
-                        </div>
+                <div className="flex flex-col">
+                    <div className="relative">
+                        <TextInput
+                            type="number"
+                            label="Passing Grade"
+                            placeholder="e.g. 70"
+                            error={form.formState.errors.passing_percentage?.message}
+                            {...form.register("passing_percentage", { valueAsNumber: true })}
+                        />
+                        <span className="absolute right-3.5 top-8 text-[13px] font-bold text-admin-muted-foreground pointer-events-none">%</span>
                     </div>
-                    <TextInput
-                        type="number"
-                        placeholder="e.g. 70"
-                        error={form.formState.errors.passing_percentage?.message}
-                        {...form.register("passing_percentage", { valueAsNumber: true })}
-                    />
+                    <p className="text-[10px] sm:text-[11px] text-admin-muted-foreground mt-1.5 leading-relaxed">
+                        Minimum percentage required to pass and receive a certificate.
+                    </p>
                 </div>
 
-                {/* Retries Card */}
-                <div className="flex flex-col p-5 rounded-xl border border-admin-border bg-admin-bg/50 focus-within:ring-1 focus-within:ring-admin-primary/50 focus-within:border-admin-primary transition-all shadow-sm">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-orange-500/10 rounded-lg text-orange-600">
-                            <RotateCcw className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-admin-fg">Max Retries</h3>
-                            <p className="text-[11px] text-admin-muted-foreground">Total allowed attempts</p>
-                        </div>
-                    </div>
+                <div className="flex flex-col">
                     <TextInput
                         type="number"
+                        label="Maximum Attempts"
                         placeholder="e.g. 3"
                         error={form.formState.errors.max_attempts?.message}
                         {...form.register("max_attempts", { valueAsNumber: true })}
                     />
+                    <p className="text-[10px] sm:text-[11px] text-admin-muted-foreground mt-1.5 leading-relaxed">
+                        Total times a student can fail before being permanently locked out.
+                    </p>
                 </div>
 
-                {/* Cooldown Card */}
-                <div className="flex flex-col p-5 rounded-xl border border-admin-border bg-admin-bg/50 focus-within:ring-1 focus-within:ring-admin-primary/50 focus-within:border-admin-primary transition-all shadow-sm">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600">
-                            <TimerReset className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-admin-fg">Cooldown</h3>
-                            <p className="text-[11px] text-admin-muted-foreground">Hours between retries</p>
-                        </div>
+                <div className="flex flex-col">
+                    <div className="relative">
+                        <TextInput
+                            type="number"
+                            label="Cooldown Period"
+                            placeholder="e.g. 720"
+                            error={form.formState.errors.cooldown_hours?.message}
+                            {...form.register("cooldown_hours", { valueAsNumber: true })}
+                        />
+                        <span className="absolute right-3.5 top-8 text-[12px] font-semibold text-admin-muted-foreground pointer-events-none">hrs</span>
                     </div>
-                    <TextInput
-                        type="number"
-                        placeholder="e.g. 24"
-                        error={form.formState.errors.cooldown_hours?.message}
-                        {...form.register("cooldown_hours", { valueAsNumber: true })}
-                    />
+                    <p className="text-[10px] sm:text-[11px] text-admin-muted-foreground mt-1.5 leading-relaxed">
+                        Wait time between failed attempts. Set to <span className="font-mono bg-admin-muted/10 px-1 rounded">0</span> for instant retries.
+                    </p>
                 </div>
 
             </div>
 
-            <div className="mt-4 pt-6 flex flex-col sm:flex-row justify-between gap-4 border-t border-admin-border">
-                <button type="button" onClick={onBack} disabled={isSubmitting} className={`${btnSecondaryClass} w-full sm:w-auto`}>
+            <div className="mt-10 pt-4 flex flex-col sm:flex-row justify-between items-center gap-3 border-t border-admin-border/40">
+                <button type="button" onClick={onBack} disabled={isSubmitting} className={`${btnSecondaryClass} w-full sm:w-auto text-[13px] sm:text-sm cursor-pointer`}>
                     Back
                 </button>
-                <button type="submit" disabled={isSubmitting || !form.formState.isValid} className={`${btnPrimaryClass} w-full sm:w-auto`}>
-                    {isSubmitting ? "Processing..." : "Save & Continue"} <ChevronRight className="w-4 h-4 ml-1.5" />
+                <button type="submit" disabled={isSubmitting || !form.formState.isValid} className={`${btnPrimaryClass} w-full sm:w-auto text-[13px] sm:text-sm cursor-pointer`}>
+                    {isSubmitting ? "Saving..." : "Save & Continue"} <ChevronRight className="w-4 h-4 ml-1.5" />
                 </button>
             </div>
         </form>

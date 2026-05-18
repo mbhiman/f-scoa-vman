@@ -2,10 +2,9 @@ import React, { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FileText, Plus, Trash2, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ChevronRight, CheckCircle2, Circle } from "lucide-react";
 import { TextInput, baseInputClass, validBorderClass, errorBorderClass, btnPrimaryClass, btnSecondaryClass } from "../ui/FormInputs";
 
-// Fix: Removed .default(0) from sort_order to align strict typing
 const quizOptionSchema = z.object({
     option_text: z.string().trim().min(1, "Required"),
     is_correct: z.boolean(),
@@ -67,96 +66,113 @@ export function QuizBuilder({ initialData, onSubmit, onBack }: QuizBuilderProps)
     };
 
     return (
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 admin-card p-6 md:p-8">
-            <div className="border-b border-admin-border pb-4">
-                <h2 className="text-lg font-semibold text-admin-fg">Quiz Construction</h2>
-                <p className="text-sm text-admin-muted-foreground mt-1">Add questions and assign exactly one correct answer per question.</p>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col bg-admin-card rounded-xl border border-admin-border/50 p-4 sm:p-8">
+            <div className="border-b border-admin-border/40 pb-4 mb-6">
+                <h2 className="text-[15px] sm:text-lg font-bold text-admin-fg">Assessment Builder</h2>
+                <p className="text-[11px] sm:text-[13px] text-admin-muted-foreground mt-1">Create questions and define correct answers.</p>
             </div>
 
-            <TextInput
-                label="Assessment Title"
-                placeholder="e.g. Final Evaluation"
-                error={form.formState.errors.title?.message}
-                {...form.register("title")}
-            />
+            <div className="mb-8 max-w-xl">
+                <TextInput
+                    label="Assessment Title"
+                    placeholder="e.g. Final Evaluation"
+                    error={form.formState.errors.title?.message}
+                    {...form.register("title")}
+                />
+            </div>
 
-            <div className="space-y-4">
-                <div className="flex justify-between items-end">
-                    <h3 className="text-sm font-semibold text-admin-fg flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-admin-primary" /> Questionnaire *
-                    </h3>
-                    <button type="button" className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-admin-muted/20 text-admin-fg hover:bg-admin-muted/40 transition-colors" onClick={() => appendQuestion({ question_text: "", sort_order: questions.length, options: [{ option_text: "", is_correct: true, sort_order: 0 }, { option_text: "", is_correct: false, sort_order: 1 }] })}>
-                        <Plus className="w-3.5 h-3.5 mr-1" /> Add Question
+            <div>
+                <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-[13px] sm:text-[15px] font-semibold text-admin-fg">Questions</h3>
+                    <button type="button" onClick={() => appendQuestion({ question_text: "", sort_order: questions.length, options: [{ option_text: "", is_correct: true, sort_order: 0 }, { option_text: "", is_correct: false, sort_order: 1 }] })} className="text-[11px] sm:text-xs font-medium text-white bg-admin-primary hover:bg-admin-primary-hover px-3 py-1.5 rounded cursor-pointer transition-colors flex items-center">
+                        <Plus className="w-3 h-3 mr-1" /> Add Question
                     </button>
                 </div>
 
-                {form.formState.errors.questions?.root && <p className="text-xs font-medium text-red-500">{form.formState.errors.questions.root.message}</p>}
+                {form.formState.errors.questions?.root && (
+                    <div className="text-[11px] sm:text-xs text-red-500 mb-4">{form.formState.errors.questions.root.message}</div>
+                )}
 
-                {questions.map((q, qIdx) => {
-                    const optionsPath = `questions.${qIdx}.options` as const;
-                    const options = form.watch(optionsPath) ?? [];
+                <div className="space-y-2">
+                    {questions.map((q, qIdx) => {
+                        const optionsPath = `questions.${qIdx}.options` as const;
+                        const options = form.watch(optionsPath) ?? [];
 
-                    return (
-                        <div key={q.id} className="p-5 rounded-xl border border-admin-border bg-admin-bg shadow-sm space-y-4">
-                            <div className="flex gap-4 items-start">
-                                <span className="flex items-center justify-center w-7 h-7 rounded-full bg-admin-primary/10 text-admin-primary text-sm font-bold shrink-0">Q{qIdx + 1}</span>
-                                <div className="flex-1">
-                                    <textarea className={`${baseInputClass} ${form.formState.errors.questions?.[qIdx]?.question_text ? errorBorderClass : validBorderClass} min-h-20 resize-y`} {...form.register(`questions.${qIdx}.question_text` as const)} placeholder="Enter the question text here..." />
-                                    <p className="mt-1 text-xs text-red-500">{form.formState.errors.questions?.[qIdx]?.question_text?.message}</p>
-                                </div>
-                                <button type="button" onClick={() => removeQuestion(qIdx)} className="p-2 text-admin-muted-foreground hover:text-red-500 transition-colors">
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            <div className="ml-11 p-4 rounded-lg border border-admin-border bg-admin-card">
-                                <div className="flex justify-between items-center mb-3">
-                                    <label className="text-xs font-bold text-admin-fg uppercase tracking-wider">Answer Options</label>
-                                    <button type="button" className="text-xs font-semibold text-admin-primary hover:text-admin-primary-hover" onClick={() => form.setValue(optionsPath, [...options, { option_text: "", is_correct: false, sort_order: options.length }], { shouldValidate: true })}>
-                                        + Add Option
+                        return (
+                            <div key={q.id} className="py-5 border-b border-admin-border/40 last:border-0 relative">
+                                <div className="flex gap-3 sm:gap-4 items-start mb-3">
+                                    <span className="text-[12px] sm:text-[14px] font-semibold text-admin-muted-foreground mt-2 w-4">
+                                        {qIdx + 1}.
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                        <textarea className={`${baseInputClass} ${form.formState.errors.questions?.[qIdx]?.question_text ? errorBorderClass : validBorderClass} min-h-15 py-2 px-3 text-[13px] sm:text-sm resize-y`} {...form.register(`questions.${qIdx}.question_text` as const)} placeholder="Type question..." />
+                                        {form.formState.errors.questions?.[qIdx]?.question_text && (
+                                            <p className="mt-1 text-[10px] text-red-500">{form.formState.errors.questions?.[qIdx]?.question_text?.message}</p>
+                                        )}
+                                    </div>
+                                    <button type="button" onClick={() => removeQuestion(qIdx)} className="p-2 text-admin-muted-foreground hover:text-red-500 rounded transition-colors cursor-pointer mt-1">
+                                        <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
-                                {form.formState.errors.questions?.[qIdx]?.options?.root && <p className="text-xs text-red-500 mb-2">{form.formState.errors.questions[qIdx].options?.root?.message}</p>}
 
-                                <div className="space-y-3">
-                                    {options.map((opt, oIdx) => (
-                                        <div key={oIdx} className={`flex items-center gap-3 p-2 rounded-lg border ${opt.is_correct ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-admin-border bg-admin-bg'}`}>
-                                            <input
-                                                type="radio"
-                                                name={`correct-${qIdx}`}
-                                                checked={opt.is_correct}
-                                                className="w-4 h-4 text-emerald-500 focus:ring-emerald-500 bg-admin-bg border-admin-border cursor-pointer ml-2"
-                                                onChange={() => {
-                                                    const next = options.map((o, i) => ({ ...o, is_correct: i === oIdx }));
+                                <div className="pl-8 sm:pl-10">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-[11px] font-medium text-admin-muted-foreground">Options (Select the correct one)</span>
+                                        <button type="button" className="text-[10px] font-medium text-admin-primary hover:text-admin-primary-hover cursor-pointer" onClick={() => form.setValue(optionsPath, [...options, { option_text: "", is_correct: false, sort_order: options.length }], { shouldValidate: true })}>
+                                            + Add Option
+                                        </button>
+                                    </div>
+
+                                    {form.formState.errors.questions?.[qIdx]?.options?.root && (
+                                        <p className="text-[10px] text-red-500 mb-2">{form.formState.errors.questions[qIdx].options?.root?.message}</p>
+                                    )}
+
+                                    <div className="flex flex-col gap-2">
+                                        {options.map((opt, oIdx) => (
+                                            <div key={oIdx} className="flex items-center gap-2 max-w-md">
+                                                <button
+                                                    type="button"
+                                                    className="p-1 cursor-pointer transition-colors"
+                                                    onClick={() => {
+                                                        const next = options.map((o, i) => ({ ...o, is_correct: i === oIdx }));
+                                                        form.setValue(optionsPath, next, { shouldValidate: true });
+                                                    }}
+                                                >
+                                                    {opt.is_correct ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Circle className="w-4 h-4 text-admin-muted-foreground/40 hover:text-emerald-500/50" />}
+                                                </button>
+
+                                                <input
+                                                    className={`${baseInputClass} ${validBorderClass} py-1.5 px-3 text-[12px] sm:text-[13px] bg-transparent w-full ${opt.is_correct ? 'text-emerald-700 dark:text-emerald-400 font-medium' : ''}`}
+                                                    value={opt.option_text}
+                                                    placeholder={`Option ${oIdx + 1}`}
+                                                    onChange={(e) => {
+                                                        const next = [...options];
+                                                        next[oIdx] = { ...next[oIdx], option_text: e.target.value };
+                                                        form.setValue(optionsPath, next, { shouldValidate: true });
+                                                    }}
+                                                />
+                                                <button type="button" disabled={options.length <= 2} className="p-1.5 text-admin-muted-foreground hover:text-red-500 disabled:opacity-30 cursor-pointer transition-colors" onClick={() => {
+                                                    const next = [...options];
+                                                    next.splice(oIdx, 1);
+                                                    if (!next.some(x => x.is_correct) && next.length > 0) next[0].is_correct = true;
                                                     form.setValue(optionsPath, next, { shouldValidate: true });
-                                                }}
-                                            />
-                                            <input className={`${baseInputClass} border-transparent bg-transparent focus:bg-admin-bg focus:border-admin-primary py-1.5 flex-1 ${opt.is_correct ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}`} value={opt.option_text} placeholder={`Option ${oIdx + 1}`} onChange={(e) => {
-                                                const next = [...options];
-                                                next[oIdx] = { ...next[oIdx], option_text: e.target.value };
-                                                form.setValue(optionsPath, next, { shouldValidate: true });
-                                            }} />
-                                            <button type="button" disabled={options.length <= 2} className="p-2 text-admin-muted-foreground hover:text-red-500 disabled:opacity-30" onClick={() => {
-                                                const next = [...options];
-                                                next.splice(oIdx, 1);
-                                                if (!next.some(x => x.is_correct) && next.length > 0) next[0].is_correct = true;
-                                                form.setValue(optionsPath, next, { shouldValidate: true });
-                                            }}>
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
+                                                }}>
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                </div>
             </div>
 
-            <div className="pt-6 flex justify-between border-t border-admin-border">
-                <button type="button" onClick={onBack} disabled={isSubmitting} className={btnSecondaryClass}>Back</button>
-                <button type="submit" disabled={isSubmitting || !form.formState.isValid} className={btnPrimaryClass}>
-                    {isSubmitting ? "Processing..." : "Save & Continue"} <ChevronRight className="w-4 h-4 ml-1.5" />
+            <div className="mt-8 pt-4 flex flex-col sm:flex-row justify-between items-center gap-3 border-t border-admin-border/40">
+                <button type="button" onClick={onBack} disabled={isSubmitting} className={`${btnSecondaryClass} w-full sm:w-auto text-[13px] sm:text-sm cursor-pointer`}>Back</button>
+                <button type="submit" disabled={isSubmitting || !form.formState.isValid} className={`${btnPrimaryClass} w-full sm:w-auto text-[13px] sm:text-sm cursor-pointer`}>
+                    {isSubmitting ? "Saving..." : "Save & Continue"} <ChevronRight className="w-4 h-4 ml-1.5" />
                 </button>
             </div>
         </form>
